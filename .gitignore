@@ -32,8 +32,9 @@ media/
 static/
 .coverage
 htmlcov/
-migrations/*.py
-!migrations/__init__.py
+# 忽略所有 migrations 下的 .py 文件，除了 __init__.py
+**/migrations/*.py
+!**/migrations/__init__.py
 
 # 虚拟环境
 .venv/
