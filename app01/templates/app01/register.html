@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .account {
+            width: 600px;
+            margin: 0 auto;
+
+        }
+    </style>
+    <link rel="stylesheet" href="{% static 'bootstrap-3.4.1-dist/css/bootstrap.css' %}">
+</head>
+<body>
+
+
+<form class="account" action="" method="post">
+    {% csrf_token %}
+    <h1 style="text-align: center">注册</h1>
+    {% for field in form %}
+        {% if field.name == 'code' %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                <div class="clearfix">
+                    <div class="col-md-6" style="padding-left: 0">{{ field }}</div>
+                    <div>
+                        <button type="button" class="btn btn-default" id="get_code_btn">点击获取验证码</button>
+                    </div>
+                </div>
+
+            </div>
+        {% else %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+            </div>
+        {% endif %}
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">注册</button>
+</form>
+
+
+<script>
+    const get_code_btn = document.getElementById('get_code_btn')
+
+    get_code_btn.addEventListener('click', async function getcode() {
+        let phone = document.getElementById('id_phone').value
+        let res = await fetch(`/app01/send/sms/?tpl=register&user_phone=${phone}`)
+        let json = await res.json()
+        alert(json.msg)
+    })
+
+
+</script>
+
+</body>
+</html>
