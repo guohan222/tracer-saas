@@ -123,6 +123,13 @@ STATIC_URL = 'static/'
 ALIYUN_ACCESS_KEY_ID = '88888888'
 ALIYUN_ACCESS_KEY_SECRET = '88888888'
 
+# 短信模板ID
+SMS_TEMPLATE_ID = {
+    'login':'100001',
+    'register':'100001',
+    'reset_pwd':'100003',
+}
+
 
 
 
