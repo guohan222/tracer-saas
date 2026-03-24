@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is auto-generated, don't edit it. Thanks.
+import json
 
 from django.conf import settings
 
@@ -16,13 +17,14 @@ from alibabacloud_tea_util import models as util_models
 
 
 
-def send_verify_code(phone, tpl_code):
+def send_verify_code(phone, tpl_code, code):
     """
     自定义函数，封装阿里短信认证发送请求
     短信模板参数使用阿里定义的，不用传入
 
     :param phone:手机号
     :param tpl_code:短信模板
+    :param code:自定义验证码
     :return:
     """
     credentialsconfig = CredentialConfig(
@@ -38,7 +40,7 @@ def send_verify_code(phone, tpl_code):
         sign_name='速通互联验证码',
         template_code=tpl_code,
         phone_number=phone,
-        template_param='{"code":"##code##","min":"5"}'
+        template_param=json.dumps({"code":code,"min":"1"})
     )
     runtime = util_models.RuntimeOptions()
     resp = client.send_sms_verify_code_with_options(send_sms_verify_code_request, runtime)

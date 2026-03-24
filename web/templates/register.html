@@ -17,18 +17,13 @@
     </style>
 {% endblock %}
 
-
-
-
-
-
 {% block content %}
     <div class="container mt-5">
         <!-- 表单居中 + 限制宽度 -->
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
                 <!-- 表单卡片样式：阴影 + 圆角 + 内边距 -->
-                <form class="account p-4 shadow-sm rounded bg-white" action="" method="post">
+                <form class="account p-4 shadow-sm rounded bg-white" action="" method="post" id="reg_form">
                     {% csrf_token %}
                     <h1 class="text-center mb-4 fw-bold">用户注册</h1>
 
@@ -43,7 +38,7 @@
                                         <span class='err-msg'></span>
                                     </div>
                                     <div class="col-4 d-grid">
-                                        <button type="button" class="btn btn-outline-primary" id="get_code_btn" >
+                                        <button type="button" class="btn btn-outline-primary" id="get_code_btn">
                                             点击获取验证码
                                         </button>
                                     </div>
@@ -60,7 +55,7 @@
                     {% endfor %}
 
                     <div class="d-grid mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg">注册</button>
+                        <button type="button" class="btn btn-primary btn-lg" id="reg_btn">注册</button>
                     </div>
                 </form>
             </div>
@@ -71,9 +66,14 @@
 {% block js %}
     <script>
         const get_code_btn = document.getElementById('get_code_btn')
+        const reg_btn = document.getElementById('reg_btn')
+        let timer =null
+
+        // 发送短信
         get_code_btn.addEventListener('click', async function getcode() {
-            let errmsg = document.querySelectorAll('.err-msg')
-            errmsg.forEach(Box => {
+            // 清空所有错误信息
+            const errorBoxs = document.querySelectorAll('.err-msg')
+            errorBoxs.forEach(Box => {
                 Box.innerText = ''
             })
             let phone = document.getElementById('id_phone').value
@@ -85,8 +85,6 @@
             if (data.status) {
                 get_code_btn.disabled = true
                 sendSmsRemind()
-
-
             } else {
                 for (let field in data.error) {
                     // 通过键获取到包含错误信息的数值
@@ -100,22 +98,59 @@
         })
 
 
-        timer = null
-        function sendSmsRemind(){
-            const get_code_btn = document.getElementById('get_code_btn')
-            let time =60
-            let timer = setInterval(()=>{
-                time-=1
-                get_code_btn.innerText=`${time}+后重新发送`
-                if(time<1){
-                    clearInterval(timer)
-                    timer =null
-                    get_code_btn.innerText='点击获取验证码'
-                    get_code_btn.disabled = false
+        // 点击注册
+        reg_btn.addEventListener('click', async function () {
+            const errorBoxs = document.querySelectorAll('.err-msg')
+            errorBoxs.forEach(Box => {
+                Box.innerText = ''
+            })
+            // 通过FormData获取表单中所有带name属性的输入框中的值
+            let form_data = new FormData(document.getElementById('reg_form'))
+            let ret = await fetch('{% url 'web:register' %}', {
+                method: 'POST',
+                body: form_data
+            })
+            let ret_data = await ret.json()
 
+            if (ret_data.status) {
+                location.assign('/login/')
+
+            } else {
+                // 获取错误信息（如果有
+                // ret_data {status: false, error: {phone:[{message: '手机号格式错误', code: 'invalid'}]}}
+
+                for (let filed in ret_data.error) {
+                    let errors = ret_data.error[filed]
+                    errors.forEach(err => {
+                        const errorBox = document.getElementById(`id_${filed}`).nextElementSibling
+                        errorBox.innerText = err.message
+                    })
                 }
-            },1000)
 
+            }
+
+
+        })
+
+
+        // 短信按钮定时器
+        function sendSmsRemind() {
+            const get_code_btn = document.getElementById('get_code_btn');
+            let time = 60;
+            // 先清除旧定时器
+            if (timer) clearInterval(timer);
+            get_code_btn.innerText = `${time}秒后重新发送`;
+            // 用全局 timer，不要重新定义 let timer
+            timer = setInterval(() => {
+                time -= 1;
+                get_code_btn.innerText = `${time}秒后重新发送`;
+                if (time < 1) {
+                    clearInterval(timer);
+                    timer = null;
+                    get_code_btn.innerText = '点击获取验证码';
+                    get_code_btn.disabled = false;
+                }
+            }, 1000);
         }
     </script>
 

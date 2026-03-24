@@ -1,6 +1,5 @@
-import random
-import json
-from utils import encrypt
+import redis
+
 from web import models
 from utils.alibaba import sms
 from django_redis import get_redis_connection
@@ -28,56 +27,34 @@ class RegisterForm(forms.ModelForm):
 
     def clean_name(self):
         name = self.cleaned_data.get('name')
-        exist = models.User.objects.filter(name=name).exists()
-        if exist:
-            self.add_error('name', '用户名已存在!')
+        if not name.strip():
+            raise ValidationError('名字不能为空!')
         return name
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        exist = models.User.objects.filter(name=email).exists()
-        if exist:
-            self.add_error('name', '邮箱已存在!')
+        if not email.strip():
+            raise ValidationError('名字不能为空!')
         return email
 
-    def clean_pwd(self):
-        pwd = self.cleaned_data.get('pwd')
-        return encrypt.md5(pwd)
+    def clean(self):
+        cleaned_data = super().clean()  # 先执行父类的 clean 方法
+        password = cleaned_data.get('password')
+        confirm_password = cleaned_data.get('confirm_password')
 
-    def clean_confirm_pwd(self):
-        confirm_pwd = self.cleaned_data.get('confirm_pwd')
-        if encrypt.md5(confirm_pwd) != self.cleaned_data.get('pwd'):
-            self.add_error('confirm_pwd', '两次输入的密码不一致!')
-        return confirm_pwd
-
-    def clean_phone(self):
-        phone = self.cleaned_data.get('phone')
-        exist = models.User.objects.filter(name=phone).exists()
-        if exist:
-            self.add_error('name', '手机已存在!')
-        return phone
-
-    def clean_code(self):
-        code = self.cleaned_data.get('code')
-        phone = self.cleaned_data.get('phone')
+        if password and confirm_password and password != confirm_password:
+            # 把错误绑定到 confirm_password 字段，方便前端展示
+            self.add_error('confirm_password', '两次密码不一致')
 
         conn = get_redis_connection()
-        redis_code = conn.get(phone)
+        if cleaned_data['code'] != conn.get('phone'):
+            self.add_error('code','验证码不正确!')
+        return cleaned_data
 
-        if not redis_code:
-            raise ValidationError('验证码失效或未发送，请重新发送!')
-
-        redis_str_code = redis_code.decode('utf-8')
-        if code != redis_str_code:
-            self.add_error('code', '验证码不正确,请重新输入')
-
-        # 阿里的校验
-        # if not sms.check_verify_code(phone,code).body.model.verify_result:
-        #     self.add_error('code', '验证码不正确,请重新输入')
-        return code
 
 
 class SendSmsForm(forms.Form):
+    # 发送短信之前校验手机格式是否非空（forms.CharField等字段默认require=True）和是否满足正则表达式
     phone = forms.CharField(label='手机号', validators=[RegexValidator(r'^1[3|4|5|6|7|8|9]\d{9}$', '手机号格式错误'), ])
 
     def clean_phone(self):
@@ -90,20 +67,14 @@ class SendSmsForm(forms.Form):
         sms_tpl_id = settings.SMS_TEMPLATE_ID.get(tpl)
         if not sms_tpl_id:
             raise ValidationError('短信模板不存在!')
-
-        code = json.dumps(random.randint(1000,9999))
-        # 自定义短信
-        sms_ret = sms.send_verify_code(phone, sms_tpl_id, code)
-
-        # 利用阿里的短信
-        # sms_ret = sms.send_verify_code(phone, sms_tpl_id)
-
+        # 发送短信
+        sms_ret = sms.send_verify_code(phone, sms_tpl_id)
         if not sms_ret.body.success:
             raise ValidationError(f'短信发送失败:{sms_ret.body.message}')
 
         # 写入redis
         conn = get_redis_connection()
-        conn.set(phone, code, ex=60)
+        conn.set(phone, sms_ret.body.code, ex=60)
 
         # self.cleaned_data['sms_tpl_id'] = sms_tpl_id
         return phone
@@ -111,5 +82,3 @@ class SendSmsForm(forms.Form):
     def __init__(self, request, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.request = request
-
-

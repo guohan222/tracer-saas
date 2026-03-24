@@ -15,5 +15,12 @@ def send_sms(request):
 
 
 def register(request):
-    form  = RegisterForm()
-    return render(request,'register.html',{'form':form})
+    if request.method == 'GET':
+        form  = RegisterForm()
+        return render(request,'register.html',{'form':form})
+    form = RegisterForm(data=request.POST)
+
+    if form.is_valid():
+        form.save()
+        return JsonResponse({'status':True,'data':'/login/'})
+    return JsonResponse({'status':False,'error':form.errors.get_json_data()})

@@ -1,59 +1,121 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-    <style>
-        .account {
-            width: 600px;
-            margin: 0 auto;
+{% extends 'layout/basic.html' %}
 
+{% load  static %}
+
+{% block title %}
+    用户注册
+{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/account.css' %}">
+    <style>
+        .err-msg {
+            position: absolute;
+            color: red;
+            font-size: 13px;
         }
     </style>
-    <link rel="stylesheet" href="{% static 'plugin/bootstrap-5.3.0-alpha2-dist/css/bootstrap.min.css' %}">
-</head>
-<body>
+{% endblock %}
 
+{% block content %}
+    <div class="container mt-5">
+        <!-- 表单居中 + 限制宽度 -->
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <!-- 表单卡片样式：阴影 + 圆角 + 内边距 -->
+                <form class="account p-4 shadow-sm rounded bg-white" action="" method="post">
+                    {% csrf_token %}
+                    <h1 class="text-center mb-4 fw-bold">用户注册</h1>
 
-<form class="account" action="" method="post">
-    {% csrf_token %}
-    <h1 style="text-align: center">注册</h1>
-    {% for field in form %}
-        {% if field.name == 'code' %}
-            <div class="form-group">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                <div class="clearfix">
-                    <div class="col-md-6" style="padding-left: 0">{{ field }}</div>
-                    <div>
-                        <button type="button" class="btn btn-default" id="get_code_btn">点击获取验证码</button>
+                    {% for field in form %}
+                        {% if field.name == 'code' %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                <div class="row g-2">
+                                    <div class="col-8">
+                                        {{ field }}
+                                        <!-- 验证码输入框下方错误信息块 -->
+                                        <span class='err-msg'></span>
+                                    </div>
+                                    <div class="col-4 d-grid">
+                                        <button type="button" class="btn btn-outline-primary" id="get_code_btn" >
+                                            点击获取验证码
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                <!-- 普通输入框下方错误信息块 -->
+                                <span class='err-msg'></span>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">注册</button>
                     </div>
-                </div>
-
+                </form>
             </div>
-        {% else %}
-            <div class="form-group">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-            </div>
-        {% endif %}
-    {% endfor %}
-    <button type="submit" class="btn btn-primary">注册</button>
-</form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        const get_code_btn = document.getElementById('get_code_btn')
+        get_code_btn.addEventListener('click', async function getcode() {
+            let errmsg = document.querySelectorAll('.err-msg')
+            errmsg.forEach(Box => {
+                Box.innerText = ''
+            })
+            let phone = document.getElementById('id_phone').value
+            let res = await fetch(`{% url 'web:send_sms' %}?tpl=register&phone=${phone}`)
+            let data = await res.json()
+            console.log(data)
+            // data {status: false, error: {phone:[{message: '手机号格式错误', code: 'invalid'}]}}
+
+            if (data.status) {
+                get_code_btn.disabled = true
+                sendSmsRemind()
 
 
-<script>
-    const get_code_btn = document.getElementById('get_code_btn')
+            } else {
+                for (let field in data.error) {
+                    // 通过键获取到包含错误信息的数值
+                    let errors = data.error[field]         // [{message: '手机号格式错误', code: 'invalid'}]
+                    errors.forEach(err => {
+                        const errorBox = document.getElementById(`id_${field}`).nextElementSibling
+                        errorBox.innerText = err.message
+                    })
+                }
+            }
+        })
 
-    get_code_btn.addEventListener('click', async function getcode() {
-        let phone = document.getElementById('id_phone').value
-        let res = await fetch(`/app01/send/sms/?tpl=register&user_phone=${phone}`)
-        let json = await res.json()
-        alert(json.msg)
-    })
+
+        timer = null
+        function sendSmsRemind(){
+            const get_code_btn = document.getElementById('get_code_btn')
+            let time =60
+            let timer = setInterval(()=>{
+                time-=1
+                get_code_btn.innerText=`${time}+后重新发送`
+                if(time<1){
+                    clearInterval(timer)
+                    timer =null
+                    get_code_btn.innerText='点击获取验证码'
+                    get_code_btn.disabled = false
+
+                }
+            },1000)
+
+        }
+    </script>
 
 
-</script>
+{% endblock %}
 
-</body>
-</html>
+
+
