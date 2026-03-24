@@ -7,4 +7,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('send/sms', account.send_sms,name='send_sms'),
     path('register/', account.register,name='register'),
+    path('login/sms/', account.login_sms,name='login_sms'),
 ]

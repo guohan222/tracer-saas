@@ -3,8 +3,9 @@
 {% load  static %}
 
 {% block title %}
-    用户注册
+    短信登录
 {% endblock %}
+
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/account.css' %}">
@@ -25,7 +26,7 @@
                 <!-- 表单卡片样式：阴影 + 圆角 + 内边距 -->
                 <form class="account p-4 shadow-sm rounded bg-white" action="" method="post" id="reg_form">
                     {% csrf_token %}
-                    <h1 class="text-center mb-4 fw-bold">用户注册</h1>
+                    <h1 class="text-center mb-4 fw-bold">短信登录</h1>
 
                     {% for field in form %}
                         {% if field.name == 'code' %}
@@ -55,7 +56,7 @@
                     {% endfor %}
 
                     <div class="d-grid mt-4">
-                        <button type="button" class="btn btn-primary btn-lg" id="reg_btn">注册</button>
+                        <button type="button" class="btn btn-primary btn-lg" id="login_btn">登录</button>
                     </div>
                 </form>
             </div>
@@ -66,8 +67,8 @@
 {% block js %}
     <script>
         const get_code_btn = document.getElementById('get_code_btn')
-        const reg_btn = document.getElementById('reg_btn')
-        let timer =null
+        const login_btn = document.getElementById('login_btn')
+        let timer = null
 
         // 发送短信
         get_code_btn.addEventListener('click', async function getcode() {
@@ -77,7 +78,7 @@
                 Box.innerText = ''
             })
             let phone = document.getElementById('id_phone').value
-            let res = await fetch(`{% url 'web:send_sms' %}?tpl=register&phone=${phone}`)
+            let res = await fetch(`{% url 'web:send_sms' %}?tpl=login&phone=${phone}`)
             let data = await res.json()
             console.log(data)
             // data {status: false, error: {phone:[{message: '手机号格式错误', code: 'invalid'}]}}
@@ -97,23 +98,22 @@
             }
         })
 
-
-        // 点击注册
-        reg_btn.addEventListener('click', async function () {
+        // 点击登录
+        login_btn.addEventListener('click', async function () {
             const errorBoxs = document.querySelectorAll('.err-msg')
             errorBoxs.forEach(Box => {
                 Box.innerText = ''
             })
             // 通过FormData获取表单中所有带name属性的输入框中的值
             let form_data = new FormData(document.getElementById('reg_form'))
-            let ret = await fetch('{% url 'web:register' %}', {
+            let ret = await fetch('{% url 'web:login_sms' %}', {
                 method: 'POST',
                 body: form_data
             })
             let ret_data = await ret.json()
 
             if (ret_data.status) {
-                location.assign(ret_data.data)
+                alert(ret_data.data)
 
             } else {
                 // 获取错误信息（如果有
@@ -129,7 +129,6 @@
 
             }
         })
-
 
         // 短信按钮定时器
         function sendSmsRemind() {
@@ -152,8 +151,4 @@
         }
     </script>
 
-
 {% endblock %}
-
-
-
