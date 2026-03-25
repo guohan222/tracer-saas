@@ -1,11 +1,15 @@
-import re
+from io import BytesIO
+
+from utils.image_code import check_code
+from web import models
+from django.db.models import Q
 from django.shortcuts import render
-from web.forms.account import RegisterModelForm, SendSmsForm, LoginSmsForm
-from django.http import JsonResponse
-from django.conf import settings
-from utils.alibaba import sms
+from django.core.exceptions import ValidationError
+from django.http import JsonResponse, HttpResponse
+from web.forms.account import RegisterModelForm, SendSmsForm, LoginSmsForm, LoginForm
 
 
+# 发送短信
 def send_sms(request):
     form = SendSmsForm(request, data=request.GET)
     if form.is_valid():
@@ -13,6 +17,18 @@ def send_sms(request):
     return JsonResponse({'status': False, 'error': form.errors.get_json_data()})
 
 
+# 获取图片验证码
+def img_code(request):
+    img_obj, code = check_code()
+    stream = BytesIO()
+    img_obj.save(stream, 'png')
+    request.session.clear_expired()
+    request.session['img_code'] = code
+    request.session.set_expiry(60)
+    return HttpResponse(stream.getvalue())
+
+
+# 注册
 def register(request):
     if request.method == 'GET':
         form = RegisterModelForm()
@@ -25,6 +41,7 @@ def register(request):
     return JsonResponse({'status': False, 'error': form.errors.get_json_data()})
 
 
+# 短信登录
 def login_sms(request):
     if request.method == 'GET':
         form = LoginSmsForm()
@@ -33,5 +50,31 @@ def login_sms(request):
     form = LoginSmsForm(data=request.POST)
     if form.is_valid():
         user_obj = form.cleaned_data.get('phone')
+        request.session['user_id'] = user_obj.id
+        request.session.set_expiry(60 * 60 * 24 * 14)
         return JsonResponse({'status': True, 'data': '666'})
     return JsonResponse({'status': False, 'error': form.errors.get_json_data()})
+
+
+# 密码登录
+def login(request):
+    if request.method == "GET":
+        form = LoginForm(request)
+        return render(request, 'login.html', {'form': form})
+    form = LoginForm(request, data=request.POST)
+    if form.is_valid():
+        # 表单验证通过(图片验证码对比成功）
+        # 进行手机号/邮箱和密码的比对
+        phone_or_email = form.cleaned_data.get('phone_or_email')
+        pwd = form.cleaned_data.get('pwd')
+        user_obj = models.User.objects.filter(
+            Q(phone=phone_or_email) | Q(email=phone_or_email)).filter(
+            pwd=pwd).first()
+
+        if user_obj:
+            # 登录成功后恢复session的有效期
+            request.session['user_id'] = user_obj.id
+            request.session.set_expiry(60 * 60 * 24 * 14)
+            return HttpResponse('成功')
+        form.add_error('phone_or_email', '手机/邮箱与密码不匹配')
+    return render(request, 'login.html', {'form': form})

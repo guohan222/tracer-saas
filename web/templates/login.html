@@ -1,0 +1,86 @@
+{% extends 'layout/basic.html' %}
+
+{% load  static %}
+
+{% block title %}
+    密码登录
+{% endblock %}
+
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/account.css' %}">
+    <style>
+        .err-msg {
+            position: absolute;
+            color: red;
+            font-size: 13px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <!-- 表单居中 + 限制宽度 -->
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <!-- 表单卡片样式：阴影 + 圆角 + 内边距 -->
+                <form class="account p-4 shadow-lg rounded-3 bg-white border-0" action="" method="post" id="reg_form">
+                    {% csrf_token %}
+                    <h1 class="text-center mb-4 fw-bold">密码登录</h1>
+
+                    {% for field in form %}
+                        {% if field.name == 'code' %}
+                            <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            <div class="row g-2">
+                                <div class="col-8">
+                                    {{ field }}
+                                    <!-- 验证码输入框下方错误信息块 -->
+                                    <span class='err-msg'>{{ field.errors.0 }}</span>
+                                </div>
+                                <div class="col-4 d-grid">
+                                    <img src="{% url 'web:img_code' %}" id="get_img_code">
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                <!-- 普通输入框下方错误信息块 -->
+                                <span class='err-msg'>{{ field.errors.0 }}</span>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg" id="login_btn">登录</button>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <a href="{% url 'web:login_sms' %}" class="text-primary" style="text-decoration: none;">
+                            <small>短信登录？</small>
+                        </a>
+                    </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block js %}
+    <script>
+        // 点击图片获取新验证码
+        const get_img_code = document.getElementById('get_img_code')
+        get_img_code.addEventListener('click', function () {
+            // 匿名函数this指向调用这个函数的对象，箭头函数this指向父局作用域的this
+
+            // 方法一
+            let old_src = this.getAttribute('src')
+            this.setAttribute('src', old_src + '?')
+            // 方法二
+            // this.src += '?'
+        })
+
+
+    </script>
+{% endblock %}
