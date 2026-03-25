@@ -36,26 +36,31 @@
             </ul>
 
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'web:register' %}">注 册</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'web:login' %}">登录</a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                       aria-expanded="false">
-                        User
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">资产中心</a></li>
-                        <li><a class="dropdown-item" href="#">账号中心</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="{% url 'web:login' %}">退出登录</a></li>
-                    </ul>
-                </li>
+                {% if not request.tracer %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'web:register' %}">注 册</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'web:login' %}">登录</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                            {{ request.tracer.name }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">资产中心</a></li>
+                            <li><a class="dropdown-item" href="#">账号中心</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'web:logout' %}">退出登录</a></li>
+                        </ul>
+                    </li>
+
+                {% endif %}
+
 
             </ul>
         </div>
