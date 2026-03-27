@@ -20,7 +20,9 @@ class AuthMiddleware(MiddlewareMixin):
         # 获取用户是否已登录信息
         user_id = request.session.get('user_id',0)
         user_obj = models.User.objects.filter(id=user_id).first()
+
         request.tracer.user = user_obj
+
 
         # 判断请求地址需否需要具有登录权限
         if request.path_info in settings.URL_WHITE_LIST:
@@ -36,8 +38,6 @@ class AuthMiddleware(MiddlewareMixin):
             subscribe_obj = models.Subscribe.objects.filter(user=user_obj, status=2).order_by('pk').first()
         user_product = subscribe_obj.product if user_obj else None
 
-        # 对用户信息和用户目前订阅进行封装
         request.tracer.product =  user_product
-
 
         return None

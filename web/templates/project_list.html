@@ -5,6 +5,179 @@
 {% endblock %}
 
 {% block content %}
+    <div class="container mt-4">
+        <button
+                class="btn btn-outline-primary rounded-lg px-4 py-2 d-flex align-items-center gap-2"
+                data-bs-toggle="modal"
+                data-bs-target="#newProjectModal"
+                style="border-width: 2px; font-weight: 500;"
+        >
+            <i class="fa-solid fa-plus"></i>
+            新建项目
+        </button>
 
+        <!-- 星标项目 -->
+        <div class="container px-4 py-5" id="featured-3">
+            <h2 class="pb-2 border-bottom">星标项目</h2>
+            <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+                <div class="feature col">
+                    <div class="feature-icon d-inline-flex align-items-center justify-content-center text-bg-primary bg-gradient fs-2 mb-3">
+                        <svg class="bi" width="1em" height="1em">
+                            <use xlink:href="#collection"></use>
+                        </svg>
+                    </div>
+                    <h3 class="fs-2">Saas项目</h3>
+                    <p>Paragraph of </p>
+                    <a href="#" class="icon-link">
+                        点击进入
+                        <svg class="bi">
+                            <use xlink:href="#chevron-right"></use>
+                        </svg>
+                    </a>
+                </div>
+                <div class="feature col">
+                    <div class="feature-icon d-inline-flex align-items-center justify-content-center text-bg-primary bg-gradient fs-2 mb-3">
+                        <svg class="bi" width="1em" height="1em">
+                            <use xlink:href="#collection"></use>
+                        </svg>
+                    </div>
+                    <h3 class="fs-2">Saas项目</h3>
+                    <p>Paragraph of text beneath the heading to explain the heading. We'll add onto it with another
+                        sentence
+                        and probably just keep going until we run out of words.</p>
+                    <a href="#" class="icon-link">
+                        点击进入
+                        <svg class="bi">
+                            <use xlink:href="#chevron-right"></use>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 创建的项目 -->
+        <div class="container px-4 py-5" id="featured-3">
+            <h2 class="pb-2 border-bottom">我创建的项目</h2>
+            <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+                <div class="feature col">
+                    <div class="feature-icon d-inline-flex align-items-center justify-content-center text-bg-primary bg-gradient fs-2 mb-3">
+                        <svg class="bi" width="1em" height="1em">
+                            <use xlink:href="#collection"></use>
+                        </svg>
+                    </div>
+                    <h3 class="fs-2">Saas项目</h3>
+                    <p>Paragraph of text beneath the heading to explain the heading. We'll add onto it with another
+                        sentence
+                        and probably just keep going until we run out of words.</p>
+                    <a href="#" class="icon-link">
+                        点击进入
+                        <svg class="bi">
+                            <use xlink:href="#chevron-right"></use>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 参加的项目 -->
+        <div class="container px-4 py-5" id="featured-3">
+            <h2 class="pb-2 border-bottom">我参加的项目</h2>
+            <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+                <div class="feature col">
+                    <div class="feature-icon d-inline-flex align-items-center justify-content-center text-bg-primary bg-gradient fs-2 mb-3">
+                        <svg class="bi" width="1em" height="1em">
+                            <use xlink:href="#collection"></use>
+                        </svg>
+                    </div>
+                    <h3 class="fs-2">Saas项目</h3>
+                    <p>Paragraph of text beneath the heading to explain the heading. We'll add onto it with another
+                        sentence
+                        and probably just keep going until we run out of words.</p>
+                    <a href="#" class="icon-link">
+                        点击进入
+                        <svg class="bi">
+                            <use xlink:href="#chevron-right"></use>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 新建项目模态框 -->
+    <div class="modal fade" id="newProjectModal" tabindex="-1" aria-labelledby="newProjectModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newProjectModalLabel">新建项目</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 这里预留表单位置，你后续可以自己添加 -->
+                    <form action="" method="post" id="proj_form">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                <!-- 普通输入框下方错误信息块 -->
+                                <span class='err-msg'></span>
+                            </div>
+                        {% endfor %}
+                    </form>
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="add_proj">创建项目</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        const newProjectModal = document.getElementById('newProjectModal')
+        const proj_form = document.getElementById('proj_form')
+        const add_proj = document.getElementById('add_proj')
+        const errorBoxs = document.querySelectorAll('.err-msg');
+
+        // 打开模态框清空错误信息，重置表单
+        newProjectModal.addEventListener('click', function () {
+            errorBoxs.forEach(Box => {
+                Box.innerText = ''
+            })
+            proj_form.reset()
+        })
+
+        add_proj.addEventListener('click', async function () {
+            errorBoxs.forEach(Box => {
+                Box.innerText = ''
+            })
+
+            let form_data = new FormData(proj_form)
+            let res = await fetch('{% url 'web:project_list' %}', {
+                method: 'POST',
+                body: form_data
+            })
+            let data = await res.json()
+            if (data.status) {
+                location.assign('{% url 'web:project_list' %}')
+            } else {
+                // data {status:xx,form:{field:[xx]}}
+                for (let field in data.form) {
+                    let errors = data.form[field][0]
+                    let error_element = document.getElementById(`id_${field}`).nextElementSibling
+                    error_element.innerText = errors
+                }
+            }
+        })
+
+    </script>
 
 {% endblock %}
