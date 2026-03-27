@@ -133,7 +133,15 @@ SMS_TEMPLATE_ID = {
     'reset_pwd':'100003',
 }
 
-
+# url白名单
+URL_WHITE_LIST = [
+    '/send/sms/',
+    '/img/code/',
+    '/register/',
+    '/login/',
+    '/login/sms/',
+    '/index/',
+]
 
 
 try:

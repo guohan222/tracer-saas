@@ -1,8 +1,11 @@
+import uuid
+import datetime
 from io import BytesIO
 
 from utils.image_code import check_code
 from web import models
 from django.db.models import Q
+from django.urls import reverse
 from django.shortcuts import render, redirect
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse, HttpResponse
@@ -36,8 +39,22 @@ def register(request):
 
     form = RegisterModelForm(data=request.POST)
     if form.is_valid():
-        form.save()
-        return JsonResponse({'status': True, 'data': '/login/'})
+        # 用户表中注册新用户
+        instance = form.save()
+
+        # 新用户添加免费版订阅
+        product_obj = models.Product.objects.filter(category=1, name='个人免费版').first()
+        models.Subscribe.objects.create(
+            status=2,
+            order=str(uuid.uuid4()),
+            product=product_obj,
+            user=instance, count=0,
+            price=0,
+            start_time=datetime.datetime.now()
+        )
+        url = reverse('web:login')
+        return JsonResponse({'status': True, 'data': url})
+
     return JsonResponse({'status': False, 'error': form.errors.get_json_data()})
 
 
@@ -52,7 +69,8 @@ def login_sms(request):
         user_obj = form.cleaned_data.get('phone')
         request.session['user_id'] = user_obj.id
         request.session.set_expiry(60 * 60 * 24 * 14)
-        return JsonResponse({'status': True, 'data': '666'})
+        url = reverse('web:project_list')
+        return JsonResponse({'status': True, 'data': url})
     return JsonResponse({'status': False, 'error': form.errors.get_json_data()})
 
 
@@ -75,13 +93,12 @@ def login(request):
             # 登录成功后恢复session的有效期
             request.session['user_id'] = user_obj.id
             request.session.set_expiry(60 * 60 * 24 * 14)
-            return redirect('/index/')
+            return redirect('web:project_list')
         form.add_error('phone_or_email', '手机/邮箱与密码不匹配')
     return render(request, 'login.html', {'form': form})
-
 
 
 # 退出登录
 def logout(request):
     request.session.flush()
-    return redirect('/index/')
+    return redirect('web:index')

@@ -1,10 +1,7 @@
 import random
 import json
-
-import requests
-
-from utils import encrypt
 from web import models
+from utils import encrypt
 from utils.alibaba import sms
 from web.forms.bootstrap import Bootstrap
 from django import forms

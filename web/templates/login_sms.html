@@ -118,7 +118,7 @@
             let ret_data = await ret.json()
 
             if (ret_data.status) {
-                alert(ret_data.data)
+                location.assign(ret_data.data)
 
             } else {
                 // 获取错误信息（如果有
