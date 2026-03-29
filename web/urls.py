@@ -1,7 +1,7 @@
 app_name = 'web'
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,re_path
 from web.views import account, project
 from web.views import home
 
@@ -19,5 +19,7 @@ urlpatterns = [
     # 登录后具有的权限
     path('logout/', account.logout, name='logout'),
     path('project/list/', project.project_list, name='project_list'),
+    path('project/star/<str:proj_type>/<int:proj_id>', project.project_star, name='project_star'),
+    path('project/unstar/<str:proj_type>/<int:proj_id>', project.project_unstar, name='project_unstar'),
 
 ]
