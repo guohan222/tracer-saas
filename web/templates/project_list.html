@@ -38,7 +38,7 @@
                                         <i class="far fa-user" aria-hidden="true"></i>
                                         <span>{{ project.proj.join_count }}</span>
                                     </div>
-                                    <a href="#"
+                                    <a href="{% url 'web:dashboard' project.proj.id %}"
                                        class="text-primary fw-bold text-decoration-none fs-7">
                                         点击进入 <i class="fas fa-arrow-right ms-1"></i>
                                     </a>
@@ -72,7 +72,7 @@
                                         <i class="far fa-user" aria-hidden="true"></i>
                                         <span>{{ project.join_count }}</span>
                                     </div>
-                                    <a href="#"
+                                    <a href="{% url 'web:dashboard' project.id %}"
                                        class="text-primary fw-bold text-decoration-none fs-7">
                                         点击进入 <i class="fas fa-arrow-right ms-1"></i>
                                     </a>
@@ -106,7 +106,7 @@
                                         <i class="far fa-user" aria-hidden="true"></i>
                                         <span>{{ project.join_count }}</span>
                                     </div>
-                                    <a href="#"
+                                    <a href="{% url 'web:dashboard' project.id %}"
                                        class="text-primary fw-bold text-decoration-none fs-7">
                                         点击进入 <i class="fas fa-arrow-right ms-1"></i>
                                     </a>

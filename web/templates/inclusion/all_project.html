@@ -1,0 +1,22 @@
+<ul class="dropdown-menu">
+    {#    将当前用户的所有项目，一个个的生成一个li标签#}
+    {% if my_proj_list %}
+        <li><i class="fa-solid fa-align-left"></i>由我创建</li>
+        {% for my_proj in my_proj_list %}
+            <li><a class="dropdown-item" href="{% url 'web:dashboard' my_proj.id %}">{{ my_proj.name }}</a></li>
+
+        {% endfor %}
+        <li><hr class="dropdown-divider"></li>
+    {% endif %}
+
+    {% if join_proj_list %}
+        <li><i class="fa-solid fa-handshake"></i>我正参与</li>
+        {% for join_proj in join_proj_list %}
+            <li><a class="dropdown-item" href="{% url 'web:dashboard' join_proj.project.id %}">{{ join_proj.project.name }}</a></li>
+        {% endfor %}
+        <li><hr class="dropdown-divider"></li>
+    {% endif %}
+     <li>  <a class="dropdown-item" href="{% url 'web:project_list' %}"><i class="fa-solid fa-layer-group"></i>所有项目</a></li>
+
+
+</ul>

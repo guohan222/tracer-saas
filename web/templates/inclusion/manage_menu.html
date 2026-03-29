@@ -1,0 +1,6 @@
+{% for menu in menu_info %}
+    <li class="nav-item">
+        <a class="nav-link {% if menu.class %}{{ menu.class }}{% endif %} " href="{{ menu.url }}">{{ menu.title }}</a>
+    </li>
+{% endfor %}
+

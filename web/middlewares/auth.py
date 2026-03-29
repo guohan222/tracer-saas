@@ -10,6 +10,7 @@ class Tracer:
     def __init__(self):
         self.user = None
         self.product = None
+        self.project = None
 
 
 class AuthMiddleware(MiddlewareMixin):
@@ -41,3 +42,25 @@ class AuthMiddleware(MiddlewareMixin):
         request.tracer.product =  user_product
 
         return None
+
+    def process_view(self,request,view_func,view_args,view_kwargs):
+        project_id = view_kwargs.get('proj_id')
+
+        # 判断url是否以manage开头，若不是则不用进行判断项目与用户有没有关系
+        if not request.path_info.startswith('/manage/'):
+            return None
+
+        # 如果不是则判断项目和用户有没有关系
+        project_obj = models.Project.objects.filter(creator=request.tracer.user,id=project_id).first()
+        if project_obj:
+            # 如果是我创建的则让其通过
+            request.tracer.project =project_obj
+            return None
+        participants_obj = models.Participants.objects.filter(user=request.tracer.user,id=project_id).first()
+        if participants_obj:
+            # 如果是我参加的
+            request.tracer.project = participants_obj.project
+            return None
+
+        # 项目和我无关不允通过
+        return redirect('web:project_list')
