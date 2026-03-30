@@ -97,6 +97,7 @@ class Wiki(models.Model):
     project = models.ForeignKey(verbose_name='所属项目',to='Project',on_delete=models.CASCADE)
     title = models.CharField(verbose_name='文章名',max_length=32)
     content = models.TextField(verbose_name='文章内容')
+    depth = models.IntegerField(verbose_name='深度',default=1)
 
     parent = models.ForeignKey(verbose_name='父文章',to='Wiki',null=True,blank=True,on_delete=models.CASCADE,related_name='children')
 

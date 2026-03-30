@@ -1,0 +1,11 @@
+{% for item in catalog_tree %}
+    <ul>
+        {% if not item.children %}
+            <li><a href="">{{ item.title }}</a></li>
+        {% else %}
+            <li><a href="">{{ item.title }}</a></li>
+            {% include "inclusion/all_catalog.html" with catalog_tree=item.children %}
+        {% endif %}
+    </ul>
+
+{% endfor %}

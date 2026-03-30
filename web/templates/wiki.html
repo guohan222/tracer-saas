@@ -1,4 +1,5 @@
 {% extends 'layout/manage.html' %}
+{% load wiki %}
 
 {% block content %}
     <div class="container-fluid mt-4">
@@ -13,14 +14,17 @@
                 <div class="row g-0" style="min-height: 85vh;">
                     <div class="col-md-3 border-end p-3 bg-light">
 
-                        左侧目录占位
+{#                        不用js操作:找父节点在动态插入子节点#}
+                        {% all_catalog request%}
+
 
                     </div>
 
                     <div class="col-md-9 p-4">
                         <div style="text-align: center; margin-top: 50px">
                             <h4>《{{ request.tracer.project.name }}》wiki文档库</h4>
-                            <a href="{% url 'web:wiki_add' proj_id=request.tracer.project.id %}"><i class="fa-solid fa-plus"></i>添加文章</a>
+                            <a href="{% url 'web:wiki_add' proj_id=request.tracer.project.id %}"><i
+                                    class="fa-solid fa-plus"></i>添加文章</a>
                         </div>
                     </div>
 

@@ -1,4 +1,5 @@
 {% extends 'layout/manage.html' %}
+{% load wiki %}
 
 {% block content %}
     <div class="container-fluid mt-4">
@@ -12,9 +13,7 @@
             <div class="card-body p-0">
                 <div class="row g-0" style="min-height: 85vh;">
                     <div class="col-md-3 border-end p-3 bg-light">
-
-                        左侧目录占位
-
+                        {% all_catalog request%}
                     </div>
 
                     <div class="col-md-9 p-4">
@@ -27,7 +26,7 @@
                                                class="form-label">{{ field.label }}</label>
                                         {{ field }}
                                         <!-- 普通输入框下方错误信息块 -->
-                                        <span class='err-msg'></span>
+                                        <span class='err-msg'>{{ field.errors.0 }}</span>
                                     </div>
                                 {% endfor %}
                                 <div class="d-grid mt-4">

@@ -8,7 +8,7 @@ class WikiModelForm(Bootstrap,forms.ModelForm):
 
     class Meta:
         model = models.Wiki
-        exclude = ('project',)
+        exclude = ('project','depth')
 
     def __init__(self,proj_id,*args,**kwargs):
         super().__init__(*args,**kwargs)
