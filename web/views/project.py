@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 
 
+# 展示项目与创建项目
 def project_list(request):
     """项目列表"""
     if request.method == 'GET':

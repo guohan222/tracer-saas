@@ -1,6 +1,7 @@
 from itertools import product
 
 from web.forms.bootstrap import Bootstrap
+from web.forms.widgets import ColorRadioSelect
 from web import models
 from django import forms
 from django.core.exceptions import ValidationError
@@ -16,7 +17,8 @@ class CreateProjectForm(Bootstrap,forms.ModelForm):
             'describe',
         )
         widgets = {
-            'describe':forms.Textarea
+            'describe':forms.Textarea,
+            'color': ColorRadioSelect(attrs={'class': 'color-radio'})
         }
 
     def __init__(self,request,*args,**kwargs):

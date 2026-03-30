@@ -89,3 +89,16 @@ class Participants(models.Model):
     user = models.ForeignKey('User', verbose_name='参加者', on_delete=models.CASCADE)
     star = models.BooleanField(verbose_name='星标项目', default=False)
     create_datetime = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+
+
+
+# wiki表
+class Wiki(models.Model):
+    project = models.ForeignKey(verbose_name='所属项目',to='Project',on_delete=models.CASCADE)
+    title = models.CharField(verbose_name='文章名',max_length=32)
+    content = models.TextField(verbose_name='文章内容')
+
+    parent = models.ForeignKey(verbose_name='父文章',to='Wiki',null=True,blank=True,on_delete=models.CASCADE,related_name='children')
+
+
+
