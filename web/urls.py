@@ -2,7 +2,7 @@ app_name = 'web'
 
 from django.contrib import admin
 from django.urls import path
-from web.views import account, project, home, manage
+from web.views import account, project, home, manage, wiki
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
@@ -27,7 +27,12 @@ urlpatterns = [
                                       path('issues/', manage.issues, name='issues'),
                                       path('statistics/', manage.statistics, name='statistics'),
                                       path('file/', manage.file, name='file'),
-                                      path('wiki/', manage.wiki, name='wiki'),
+
+                                      # wiki
+                                      path('wiki/', wiki.wiki, name='wiki'),
+                                      path('wiki/add/', wiki.wiki_add, name='wiki_add'),
+
+
                                       path('settings/', manage.settings, name='settings'),
 
                                   ], None, None)),

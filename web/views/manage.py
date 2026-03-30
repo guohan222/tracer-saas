@@ -20,9 +20,6 @@ def file(request,proj_id):
 
 
 
-def wiki(request,proj_id):
-    return render(request,'wiki.html')
-
 
 
 

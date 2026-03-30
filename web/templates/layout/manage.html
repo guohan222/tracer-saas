@@ -29,13 +29,15 @@
                     <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown"
                        aria-expanded="false">
                         项 目
+                        {% if request.tracer.project %}
+                            ({{ request.tracer.project.name }})
+                        {% endif %}
                     </a>
                     {% all_project_list request %}
                 </li>
                 {% if request.tracer.project %}
-                	{% manage_menu_list request %}
+                    {% manage_menu_list request %}
                 {% endif %}
-
 
 
             </ul>
