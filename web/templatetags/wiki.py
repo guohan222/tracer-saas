@@ -33,13 +33,14 @@ def all_catalog(request):
         else:
             catalog_tree.append(value)
 
-    return {'catalog_tree':catalog_tree}
+    return {'request':request,'catalog_tree':catalog_tree}
 
 
 """
 big_dict构造结果：
 {
     1:{
+        id:1
         title:xxx,
         parent_id:id,
         children:[

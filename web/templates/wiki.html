@@ -6,26 +6,60 @@
 
         <div class="card shadow-sm">
 
-            <div class="card-header bg-light py-2">
-                <i class="fa-solid fa-cloud"></i>wiki知识库
+            <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fa-solid fa-cloud me-1"></i>wiki知识库
+                </div>
+
+                <div class="d-flex gap-2">
+                    {% if wiki_obj %}
+
+                        <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096;">
+                            <a href="{% url 'web:wiki_add' proj_id=request.tracer.project.id %}"
+                               style="text-decoration: none;">新增wiki</a>
+                        </div>
+                        <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096;">
+                            <a href="{% url 'web:wiki_edit' proj_id=request.tracer.project.id %}?wiki_id={{ wiki_obj.id }}" style="text-decoration: none;">编辑wiki</a>
+                        </div>
+                        <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096;">
+                            <a href="{% url 'web:wiki_del' proj_id=request.tracer.project.id %}?wiki_id={{ wiki_obj.id }}"
+                               style="text-decoration: none;">删除wiki</a>
+                        </div>
+
+                    {% else %}
+
+                        <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096;">
+                            <a href="{% url 'web:wiki_add' proj_id=request.tracer.project.id %}"
+                               style="text-decoration: none;">新增wiki</a>
+                        </div>
+
+                    {% endif %}
+
+
+                </div>
             </div>
+
 
             <div class="card-body p-0">
                 <div class="row g-0" style="min-height: 85vh;">
                     <div class="col-md-3 border-end p-3 bg-light">
 
-{#                        不用js操作:找父节点在动态插入子节点#}
-                        {% all_catalog request%}
-
+                        {% all_catalog request %}
 
                     </div>
 
                     <div class="col-md-9 p-4">
-                        <div style="text-align: center; margin-top: 50px">
-                            <h4>《{{ request.tracer.project.name }}》wiki文档库</h4>
-                            <a href="{% url 'web:wiki_add' proj_id=request.tracer.project.id %}"><i
-                                    class="fa-solid fa-plus"></i>添加文章</a>
-                        </div>
+                        {% if wiki_obj %}
+                            {{ wiki_obj.content }}
+                        {% else %}
+                            <div style="text-align: center; margin-top: 50px">
+                                <h4>《{{ request.tracer.project.name }}》wiki文档库</h4>
+                                <a href="{% url 'web:wiki_add' proj_id=request.tracer.project.id %}"
+                                   style="text-decoration: none;"><i
+                                        class="fa-solid fa-plus"></i>添加文章</a>
+                            </div>
+                        {% endif %}
+
                     </div>
 
                 </div>
