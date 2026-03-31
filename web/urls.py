@@ -33,6 +33,7 @@ urlpatterns = [
                                       path('wiki/add/', wiki.wiki_add, name='wiki_add'),
                                       path('wiki/del/', wiki.wiki_del, name='wiki_del'),
                                       path('wiki/edit/', wiki.wiki_edit, name='wiki_edit'),
+                                      path('wiki/upload/', wiki.wiki_upload, name='wiki_upload'),
 
 
 

@@ -1,8 +1,16 @@
+
+from django.http import JsonResponse
+
 from web import models
 from web.forms.wiki import WikiModelForm
+from utils.encrypt import uid
+from utils.tencent.cos import upload_file
 
 from django.urls import reverse
 from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
+
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 
 # wiki菜单首页
@@ -75,3 +83,30 @@ def wiki_edit(request, proj_id):
         return redirect(preview)
 
     return render(request, 'wiki_form.html', {'form': form})
+
+
+# wiki中上传图片
+@csrf_exempt
+@xframe_options_sameorigin
+def wiki_upload(request,proj_id):
+    result = {
+        'success':0,
+        'message':'',
+        'url':''
+    }
+
+    # 获取用户上传的文件对象
+    img_obj = request.FILES.get('editormd-image-file')
+    if not img_obj:
+        result['message'] = '请选择文件!'
+        return JsonResponse(result)
+
+    # 文件后缀名（文件格式）
+    extension = img_obj.name.rsplit('.')[-1]
+    # 如果向桶中上传的文件，在桶中起同一个名字则会覆盖掉另一个
+    key = f'{uid(request.tracer.user.phone)}.{extension}'
+    url = upload_file(request.tracer.project.bucket,request.tracer.project.region,img_obj,key)
+    result['success'] = 1
+    result['url'] = url
+    print(f'前端数据：{result}')
+    return JsonResponse(result)
