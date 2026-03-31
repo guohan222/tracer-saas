@@ -1,5 +1,11 @@
 {% extends 'layout/manage.html' %}
 {% load wiki %}
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'plugin/editor.md-master/css/editormd.min.css' %}">
+{% endblock %}
+
 
 {% block content %}
     <div class="container-fluid mt-4">
@@ -13,7 +19,7 @@
             <div class="card-body p-0">
                 <div class="row g-0" style="min-height: 85vh;">
                     <div class="col-md-3 border-end p-3 bg-light">
-                        {% all_catalog request%}
+                        {% all_catalog request %}
                     </div>
 
                     <div class="col-md-9 p-4">
@@ -21,13 +27,24 @@
                             <form action="" method="post">
                                 {% csrf_token %}
                                 {% for field in form %}
-                                    <div class="mb-3">
-                                        <label for="{{ field.id_for_label }}"
-                                               class="form-label">{{ field.label }}</label>
-                                        {{ field }}
-                                        <!-- 普通输入框下方错误信息块 -->
-                                        <span class='err-msg'>{{ field.errors.0 }}</span>
-                                    </div>
+                                    {% if field.name == 'content' %}
+                                        <div class="mb-3">
+                                            <label for="{{ field.id_for_label }}"
+                                                   class="form-label">{{ field.label }}</label>
+                                            <div id="editor">{{ field }}</div>
+
+                                            <!-- 普通输入框下方错误信息块 -->
+                                            <span class='err-msg'>{{ field.errors.0 }}</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="mb-3">
+                                            <label for="{{ field.id_for_label }}"
+                                                   class="form-label">{{ field.label }}</label>
+                                            {{ field }}
+                                            <!-- 普通输入框下方错误信息块 -->
+                                            <span class='err-msg'>{{ field.errors.0 }}</span>
+                                        </div>
+                                    {% endif %}
                                 {% endfor %}
                                 <div class="d-grid mt-4">
                                     <button type="submit" class="btn btn-primary btn-lg" id="reg_btn">提交</button>
@@ -41,4 +58,25 @@
 
         </div>
     </div>
+{% endblock %}
+
+{% block js %}
+
+    <script src="{% static 'plugin/editor.md-master/editormd.min.js' %}"></script>
+
+    <script>
+    $(function() {
+        initEditorMd();
+    });
+
+    function initEditorMd(){
+        editormd('editor',{
+            placeholder:'请输入内容',
+            height:650,
+            path:"{% static 'plugin/editor.md-master/lib/' %}"
+        })
+    }
+
+
+    </script>
 {% endblock %}

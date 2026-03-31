@@ -1,5 +1,10 @@
 {% extends 'layout/manage.html' %}
 {% load wiki %}
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'plugin/editor.md-master/css/editormd.min.css' %}">
+{% endblock %}
 
 {% block content %}
     <div class="container-fluid mt-4">
@@ -19,7 +24,8 @@
                                style="text-decoration: none;">新增wiki</a>
                         </div>
                         <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096;">
-                            <a href="{% url 'web:wiki_edit' proj_id=request.tracer.project.id %}?wiki_id={{ wiki_obj.id }}" style="text-decoration: none;">编辑wiki</a>
+                            <a href="{% url 'web:wiki_edit' proj_id=request.tracer.project.id %}?wiki_id={{ wiki_obj.id }}"
+                               style="text-decoration: none;">编辑wiki</a>
                         </div>
                         <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096;">
                             <a href="{% url 'web:wiki_del' proj_id=request.tracer.project.id %}?wiki_id={{ wiki_obj.id }}"
@@ -50,7 +56,11 @@
 
                     <div class="col-md-9 p-4">
                         {% if wiki_obj %}
-                            {{ wiki_obj.content }}
+
+                            <div id="previewMarkdown">
+                                <textarea>{{ wiki_obj.content }}</textarea>
+                            </div>
+
                         {% else %}
                             <div style="text-align: center; margin-top: 50px">
                                 <h4>《{{ request.tracer.project.name }}》wiki文档库</h4>
@@ -67,4 +77,31 @@
 
         </div>
     </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'plugin/editor.md-master/editormd.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md-master/lib/flowchart.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md-master/lib/jquery.flowchart.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md-master/lib/marked.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md-master/lib/prettify.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md-master/lib/raphael.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md-master/lib/sequence-diagram.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md-master/lib/underscore.min.js' %}"></script>
+
+    <script>
+        $(function () {
+            initPreviewMarkdown()
+        })
+
+
+        function initPreviewMarkdown() {
+            editormd.markdownToHTML('previewMarkdown', {
+                htmlDecode: "style,script,iframe"
+            })
+        }
+
+    </script>
+
+
 {% endblock %}

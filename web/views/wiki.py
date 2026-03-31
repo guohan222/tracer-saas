@@ -1,7 +1,3 @@
-from os.path import exists
-
-from django.http import JsonResponse
-
 from web import models
 from web.forms.wiki import WikiModelForm
 
