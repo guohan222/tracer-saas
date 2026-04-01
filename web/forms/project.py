@@ -1,13 +1,13 @@
-from itertools import product
 
-from web.forms.bootstrap import Bootstrap
-from web.forms.widgets import ColorRadioSelect
 from web import models
 from django import forms
 from django.core.exceptions import ValidationError
+from web.forms.widgets import ColorRadioSelect
+from web.forms.bootstrap import Bootstrap
 
 
 class CreateProjectForm(Bootstrap,forms.ModelForm):
+    bootstrap_class_exclude = ['color']
 
     class Meta:
         model = models.Project
