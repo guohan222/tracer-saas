@@ -108,3 +108,21 @@ class Wiki(models.Model):
         return self.title
 
 
+
+# 文件管理表
+class FileRepository(models.Model):
+    file_type_choices = {
+        (1,'文件'),
+        (2,'文件夹'),
+    }
+    project = models.ForeignKey(verbose_name='项目',to='Project',on_delete=models.CASCADE)
+    file_type = models.SmallIntegerField(verbose_name='类型',choices=file_type_choices)
+    name = models.CharField(verbose_name='文件夹/文件名', max_length=32)
+    key = models.CharField(verbose_name='cos中名称', max_length=128, null=True, blank=True)
+    file_size = models.IntegerField(verbose_name='文件大小',null=True,blank=True)
+    file_path = models.CharField(verbose_name='文件路径',max_length=255,null=True,blank=True)
+    parent = models.ForeignKey(verbose_name='父目录',to='FileRepository',on_delete=models.CASCADE,null=True,blank=True,related_name='children')
+
+    update_user = models.ForeignKey(verbose_name='最近更新者',to='User',on_delete=models.CASCADE)
+    update_datetime = models.DateTimeField(verbose_name='更新时间',auto_now=True)
+

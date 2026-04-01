@@ -36,10 +36,11 @@ def project_list(request):
     if form.is_valid():
         # 为新建的项目创建桶
         name = form.cleaned_data['name']
-        bucket = f'{name}-{request.tracer.user.phone}-{int(time.time())}-1412810729'
+        bucket = f'{request.tracer.user.phone}-{int(time.time())}-1412810729'
         region = 'ap-guangzhou'
         create_bucket(bucket,region)
 
+        # 创建项目
         form.instance.bucket = bucket
         form.instance.region = region
         form.instance.creator = request.tracer.user

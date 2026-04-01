@@ -74,6 +74,7 @@
             placeholder:'请输入内容',
             height:650,
             path:"{% static 'plugin/editor.md-master/lib/' %}",
+
             imageUpload:true,
             imageFormats:["jpg", "jpeg", "gif", "png", "bmp", "webp"],
             imageUploadURL: "{% url 'web:wiki_upload' proj_id=request.tracer.project.id %}",

@@ -1,0 +1,118 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form action="" method="post">
+    {% csrf_token %}
+    <input type="file" id="myFile">
+
+    <button type="button" id="uploadBtn">提交</button>
+
+</form>
+
+
+<script src="{% static 'js/cos-js-sdk-v5.min.js' %}"></script>
+<script>
+
+    // 上传文件，file 为选择的文件
+    async function upload(file) {
+        // 注意：这里换成你 Django 后端的真实临时密钥接口地址
+        const stsUrl = `{% url 'app01:test_credential' %}?filename=${file.name}`;
+
+        try {
+            // 1. 获取临时凭证 (告别 .then 嵌套，直接同步等待)
+            const response = await fetch(stsUrl);
+            const data = await response.json();
+
+            console.log('getKeyAndCredentials:', data);
+
+            // 2. 解构后端组装好的大礼包
+            const {credentials = {}, startTime, expiredTime, bucket, region, key} = data;
+            const {tmpSecretId, tmpSecretKey, sessionToken} = credentials;
+
+            // 3. 校验参数
+            const params = {tmpSecretId, tmpSecretKey, sessionToken, bucket, region, key};
+            const emptyParam = Object.keys(params).find(k => !params[k]);
+            if (emptyParam) {
+                // 直接抛出错误，会被最外层的 catch 捕获
+                throw new Error(`参数错误: ${emptyParam} 不能为空`);
+            }
+
+            // 4. 初始化 COS 实例
+            const cos = new COS({
+                SecretId: tmpSecretId,
+                SecretKey: tmpSecretKey,
+                SecurityToken: sessionToken,
+                StartTime: startTime,
+                ExpiredTime: expiredTime,
+            });
+
+            // 5. 执行上传并等待结果 (对回调函数进行 Promise 包装)
+            const uploadResult = await new Promise((resolve, reject) => {
+
+                // cos.uploadFile(params, callback)
+                // params是执行腾讯云uploadFile函数的所需参数
+                // callback函数的第一个参数用来接收uploadFile函数执行中出现的错误
+                // callback函数的第二个参数用来接收uploadFile函数执行完成后的结果
+
+                cos.uploadFile({
+                    Bucket: bucket,
+                    Region: region,
+                    Key: key,
+                    Body: file,
+                    onProgress: function (progressData) {
+                        console.log('上传进度：', progressData);
+                    }
+                }, function (err, uploadData) {
+                    console.log('上传结束', err || uploadData);
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(uploadData);
+                    }
+                });
+            });
+
+            // 6. 返回上传成功的结果
+            return uploadResult;
+
+        } catch (error) {
+            // 统一在这里捕获网络请求错误、参数校验错误以及上传失败的错误
+            console.error('上传流程中断或失败:', error);
+            throw error;
+        }
+    }
+
+
+    // 1. 获取输入框和按钮的 DOM 元素
+    const fileInput = document.getElementById('myFile');
+    const uploadBtn = document.getElementById('uploadBtn');
+
+    // 2. 给按钮绑定一个“点击事件” (只要用户一点，里面的代码就会执行)
+    uploadBtn.addEventListener('click', function () {
+
+        // 💥 3. 最核心的一句：从输入框的 files 数组中抓取第一个文件！
+        const file = fileInput.files[0];
+
+        // 4. 防呆设计：检查一下用户是不是什么都没选就瞎点提交
+        if (!file) {
+            alert("大哥，请先选择一个文件呀！");
+            return; // 直接终止，不往下执行了
+        }
+
+        // 5. 完美拿到文件，可以把它交给你写的 upload() 函数了！
+        console.log("成功拿到文件，文件名叫：", file.name);
+        console.log("文件大小：", file.size, "字节");
+
+        // 呼叫你的大招，开始上传！
+        upload(file);
+    });
+
+</script>
+</body>
+</html>

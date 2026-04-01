@@ -1,6 +1,6 @@
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
-from redis.commands.timeseries import GET_CMD
+from utils.tencent.cos import credential
 
 from app01.forms.account import SendSmsForm, RegisterForm, ProjectForm
 
@@ -33,4 +33,21 @@ def create_project(request):
         if form.is_valid():
             pass
     return render(request, 'app01/register.html', {'form': form})
+
+
+
+def upload(request):
+    return render(request,'app01/upload_test.html')
+
+
+
+def test_credential(request):
+    key = request.GET.get('filename')
+
+    # 2. 获取字典数据
+    result = credential('17340563297-1775033569-1412810729', 'ap-guangzhou', key)
+
+    # 3. 修正返回方式：把 HttpResponse 换成 JsonResponse
+    return JsonResponse(result)
+
 
