@@ -19,24 +19,24 @@
                 <div class="d-flex gap-2">
                     {% if wiki_obj %}
 
-                        <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096;">
+                        <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096; cursor: pointer;">
                             <a href="{% url 'web:wiki_add' proj_id=request.tracer.project.id %}"
-                               style="text-decoration: none;">新增wiki</a>
+                               style="text-decoration: none; color: inherit;"><i class="fa-regular fa-square-plus"></i>新增wiki</a>
                         </div>
-                        <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096;">
+                        <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096; cursor: pointer;">
                             <a href="{% url 'web:wiki_edit' proj_id=request.tracer.project.id %}?wiki_id={{ wiki_obj.id }}"
-                               style="text-decoration: none;">编辑wiki</a>
+                               style="text-decoration: none; color: inherit;"><i class="fa-solid fa-pen-to-square"></i>编辑wiki</a>
                         </div>
-                        <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096;">
+                        <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096; cursor: pointer;">
                             <a href="{% url 'web:wiki_del' proj_id=request.tracer.project.id %}?wiki_id={{ wiki_obj.id }}"
-                               style="text-decoration: none;">删除wiki</a>
+                               style="text-decoration: none; color: inherit;"><i class="fa-regular fa-trash-can"></i>删除wiki</a>
                         </div>
 
                     {% else %}
 
-                        <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096;">
+                        <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096; cursor: pointer;">
                             <a href="{% url 'web:wiki_add' proj_id=request.tracer.project.id %}"
-                               style="text-decoration: none;">新增wiki</a>
+                               style="text-decoration: none; color: inherit;"><i class="fa-regular fa-square-plus"></i>新增wiki</a>
                         </div>
 
                     {% endif %}
@@ -65,8 +65,7 @@
                             <div style="text-align: center; margin-top: 50px">
                                 <h4>《{{ request.tracer.project.name }}》wiki文档库</h4>
                                 <a href="{% url 'web:wiki_add' proj_id=request.tracer.project.id %}"
-                                   style="text-decoration: none;"><i
-                                        class="fa-solid fa-plus"></i>添加文章</a>
+                                   style="text-decoration: none;"><i class="fa-solid fa-plus"></i>添加文章</a>
                             </div>
                         {% endif %}
 

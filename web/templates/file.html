@@ -1,1 +1,192 @@
 {% extends 'layout/manage.html' %}
+
+
+{% block content %}
+    <div class="container-fluid mt-4">
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fa-solid fa-folder text-warning"></i> 文件库
+                </div>
+
+                <div class="d-flex gap-2">
+                    <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096; cursor: pointer;">
+                        <a href="{% url 'web:wiki_add' proj_id=request.tracer.project.id %}"
+                           style="text-decoration: none; color: inherit;"><i
+                                class="fa-solid fa-cloud-arrow-up me-1"></i>上传文件</a>
+                    </div>
+                    <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096; cursor: pointer;"
+                         data-bs-toggle="modal"
+                         data-bs-target="#newFileModal">
+                        <span style="text-decoration: none; color: inherit;"><i
+                                class="fa-solid fa-folder-plus me-1"></i>新建文件夹</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-4" style="min-height: 75vh;">
+
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb" style="font-size: 14px;">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'web:file' proj_id=request.tracer.project.id %}"
+                                                       class="text-decoration-none">
+                                <i class="fa-solid fa-house"></i> 文件库</a>
+                        </li>
+
+                        {% for breadcrumb in breadcrumb_list %}
+                            <li class="breadcrumb-item" aria-current="page">
+                                <a href="{% url 'web:file' proj_id=request.tracer.project.id %}?folder={{ breadcrumb.id }}"
+                                   class="text-decoration-none d-flex align-items-center gap-2">{{ breadcrumb.name }}</a>
+                            </li>
+                        {% endfor %}
+
+
+                    </ol>
+                </nav>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light text-muted" style="font-size: 13px;">
+                        <tr>
+                            <th scope="col" style="width: 45%;">名称</th>
+                            <th scope="col">大小</th>
+                            <th scope="col">更新者</th>
+                            <th scope="col">更新时间</th>
+                            <th scope="col" class="text-end">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody style="font-size: 14px;">
+                        {% for item in data_list %}
+                            <tr>
+                                <td>
+                                    {% if item.file_type == 2 %}
+                                        <a href="{% url 'web:file' proj_id=request.tracer.project.id %}?folder={{ item.id }}"
+                                           class="text-decoration-none text-dark d-flex align-items-center gap-2">
+                                            <i class="fa-solid fa-folder text-warning fs-5"></i>
+                                            <span>{{ item.name }}</span>
+                                        </a>
+                                    {% else %}
+                                        <a href="#"
+                                           class="text-decoration-none text-dark d-flex align-items-center gap-2">
+                                            <i class="fa-solid fa-file-image text-primary fs-5"></i>
+                                            <span>{{ item.name }}</span>
+                                        </a>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted">
+                                    {% if item.file_type == 2 %}
+                                        -
+                                    {% else %}
+                                        {{ item.file_size }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.update_user.name }}</td>
+                                <td class="text-muted">{{ item.update_datetime }}</td>
+                                <td class="text-end">
+
+                                    {% if item.file_type == 2 %}
+                                        <a href="#" class="btn btn-sm btn-light text-secondary"><i
+                                                class="fa-solid fa-pen"></i></a>
+                                        <a href="#" class="btn btn-sm btn-light text-danger"><i
+                                                class="fa-solid fa-trash"></i></a>
+                                    {% else %}
+                                        <a href="#" class="btn btn-sm btn-light text-primary"><i
+                                                class="fa-solid fa-download"></i></a>
+                                        <a href="#" class="btn btn-sm btn-light text-danger"><i
+                                                class="fa-solid fa-trash"></i></a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- 新建文件夹模态框 -->
+    <div class="modal fade" id="newFileModal" tabindex="-1" aria-labelledby="newFileModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newFileModalLabel">新建文件夹</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 这里预留表单位置，你后续可以自己添加 -->
+                    <form action="" method="post" id="file_form">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                <!-- 普通输入框下方错误信息块 -->
+                                <span class='err-msg'></span>
+                            </div>
+                        {% endfor %}
+                    </form>
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="add_file">创建文件夹</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+
+{% block js %}
+    <script>
+        const newFileModal = document.getElementById('newFileModal')
+        const file_form = document.getElementById('file_form')
+        const add_file = document.getElementById('add_file')
+        const errorBoxs = document.querySelectorAll('.err-msg');
+
+
+        newFileModal.addEventListener('click',()=>{
+            file_form.reset()
+            errorBoxs.forEach(Box => {
+                Box.innerText = ''
+            })
+        })
+
+        add_file.addEventListener('click', async function () {
+            const originalText = add_file.innerText;
+            add_file.innerText = "检测中...";
+            add_file.disabled = true; // 禁用按钮，变灰！防止狂点！
+
+            let form_data = new FormData(file_form)
+            let res = await fetch(location.href, {
+                method: 'POST',
+                body: form_data
+            })
+            let data = await res.json()
+            if (data.status) {
+                window.location.reload();
+
+            } else {
+                // data {status:xx,form:{field:[xx]}}
+                for (let field in data.form) {
+                    let errors = data.form[field][0]
+                    let error_element = document.getElementById(`id_${field}`).nextElementSibling
+                    error_element.innerText = errors
+                }
+                add_file.innerText = originalText;
+                add_file.disabled = false;
+            }
+        })
+
+    </script>
+
+{% endblock %}

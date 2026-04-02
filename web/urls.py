@@ -2,7 +2,7 @@ app_name = 'web'
 
 from django.contrib import admin
 from django.urls import path
-from web.views import account, project, home, manage, wiki
+from web.views import account, project, home, manage, wiki, file
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
@@ -23,24 +23,33 @@ urlpatterns = [
 
     # 进入项目
     path('manage/<int:proj_id>/', ([
-                                      path('dashboard/', manage.dashboard, name='dashboard'),
-                                      path('issues/', manage.issues, name='issues'),
-                                      path('statistics/', manage.statistics, name='statistics'),
-                                      path('file/', manage.file, name='file'),
-
-                                      # wiki
-                                      path('wiki/', wiki.wiki, name='wiki'),
-                                      path('wiki/add/', wiki.wiki_add, name='wiki_add'),
-                                      path('wiki/del/', wiki.wiki_del, name='wiki_del'),
-                                      path('wiki/edit/', wiki.wiki_edit, name='wiki_edit'),
-                                      path('wiki/upload/', wiki.wiki_upload, name='wiki_upload'),
+                                       path('dashboard/', manage.dashboard, name='dashboard'),
+                                       path('issues/', manage.issues, name='issues'),
+                                       path('statistics/', manage.statistics, name='statistics'),
 
 
 
-                                      path('settings/', manage.settings, name='settings'),
 
-                                  ], None, None)),
+                                       # file
+                                       path('file/', file.file, name='file'),
+                                       # path('file/add/', file.file_add, name='file_add'),
 
 
+
+
+
+
+
+
+                                       # wiki
+                                       path('wiki/', wiki.wiki, name='wiki'),
+                                       path('wiki/add/', wiki.wiki_add, name='wiki_add'),
+                                       path('wiki/del/', wiki.wiki_del, name='wiki_del'),
+                                       path('wiki/edit/', wiki.wiki_edit, name='wiki_edit'),
+                                       path('wiki/upload/', wiki.wiki_upload, name='wiki_upload'),
+
+                                       path('settings/', manage.settings, name='settings'),
+
+                                   ], None, None)),
 
 ]

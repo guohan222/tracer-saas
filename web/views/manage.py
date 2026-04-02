@@ -15,9 +15,6 @@ def statistics(request,proj_id):
 
 
 
-def file(request,proj_id):
-    return render(request,'file.html')
-
 
 
 

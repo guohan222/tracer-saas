@@ -45,7 +45,7 @@ def test_credential(request):
     key = request.GET.get('filename')
 
     # 2. 获取字典数据
-    result = credential('17340563297-1775033569-1412810729', 'ap-guangzhou', key)
+    result = credential('17340563297-1775050064-1412810729', 'ap-guangzhou', key)
 
     # 3. 修正返回方式：把 HttpResponse 换成 JsonResponse
     return JsonResponse(result)
