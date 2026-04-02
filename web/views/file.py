@@ -1,13 +1,15 @@
 from web import models
 from web.forms.file import FileModelForm
+from utils.tencent import cos
 
 from django.forms import model_to_dict
 from django.shortcuts import render
 from django.http import JsonResponse
 
 
+# 展示文件&文件夹导航、新增&编辑文件夹
 def file(request, proj_id):
-    """文件列表&添加文件"""
+    """文件列表&添加、编辑文件"""
 
     # 文件页面url情况
     # 根目录：http://127.0.0.1:8000/manage/19/file/
@@ -63,3 +65,60 @@ def file(request, proj_id):
         return JsonResponse({'status': True})
 
     return JsonResponse({'status': False, 'form': form.errors.get_json_data()})
+
+
+
+# 删除文件
+def file_del(request,proj_id):
+    del_id = request.GET.get('del_id')
+    del_obj = models.FileRepository.objects.filter(project_id=proj_id, id=del_id).first()
+
+    # 用户删除单个文件
+    if del_obj.file_type == 1:
+        # 删除文件归还用户在该项目使用的空间
+        request.tracer.project.used_storage -= del_obj.file_size
+        request.tracer.project.save()
+
+        # cos中删除文件
+        cos.del_file(request.tracer.project.bucket,request.tracer.project.region,del_obj.key)
+
+        # 在数据库中删除该文件
+        del_obj.delete()
+        return JsonResponse({'status':True})
+
+    # 用户删除整个目录
+    files_size = 0
+    key_list =[]
+    folder_list = []
+    for folder in folder_list:
+        children_list = models.FileRepository.objects.filter(project_id=proj_id,parent=folder).order_by('-file_type')
+        for item in children_list:
+            if item.file_type == 2:
+                folder_list.append(item)
+            else:
+                files_size += item.file_size
+                key_list.append({'key':item.key})
+
+    if key_list:
+        cos.del_file_list(request.tracer.project.bucket,request.tracer.project.region,key_list)
+
+    if files_size:
+        request.tracer.project.used_storage -= del_obj.file_size
+        request.tracer.project.save()
+
+    # 在数据库中删除该文件
+    del_obj.delete()
+    return JsonResponse({'status':True})
+
+
+
+
+
+
+
+
+
+
+
+
+

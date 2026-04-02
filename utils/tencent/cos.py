@@ -4,6 +4,7 @@ from qcloud_cos import CosS3Client
 from django.conf import settings
 
 
+# 创建桶
 def create_bucket(bucket,region='ap-guangzhou'):
     """
     创建桶
@@ -39,7 +40,7 @@ def create_bucket(bucket,region='ap-guangzhou'):
 
 
 
-
+# 上传文件
 def upload_file(bucket,region,file_obj,key):
     """
     上传文件
@@ -62,7 +63,7 @@ def upload_file(bucket,region,file_obj,key):
 
 
 
-
+# 获取凭证
 def credential(bucket, region, key=None):
     """ 获取cos上传临时凭证 """
     from sts.sts import Sts
@@ -114,3 +115,32 @@ def credential(bucket, region, key=None):
     }
 
     return credential_data
+
+
+
+
+# 删除文件
+def del_file(bucket,region,key):
+    config = CosConfig(Region=region, SecretId=settings.TENCENT_COS_ID, SecretKey=settings.TENCENT_COS_KEY)
+    client = CosS3Client(config)
+
+    client.delete_object(
+        Bucket=bucket,
+        Key=key
+    )
+
+
+
+
+
+# 删除多个文件
+def del_file_list(bucket,region,key_list):
+    config = CosConfig(Region=region, SecretId=settings.TENCENT_COS_ID, SecretKey=settings.TENCENT_COS_KEY)
+    client = CosS3Client(config)
+    objects = key_list
+    client.delete_objects(
+        Bucket=bucket,
+        Delete={
+            'Object': objects
+        }
+    )

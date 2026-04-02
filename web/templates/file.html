@@ -20,7 +20,7 @@
                          data-bs-toggle="modal"
                          data-bs-target="#newFileModal"
                          data-act="add"
-                         >
+                    >
                         <span style="text-decoration: none; color: inherit;"><i
                                 class="fa-solid fa-folder-plus me-1"></i>新建文件夹</span>
                     </div>
@@ -93,12 +93,19 @@
                                            data-bs-toggle="modal"
                                            data-bs-target="#newFileModal"
                                            data-act="edit"
-                                           data-fid = {{ item.id }}
+                                           data-fid="{{ item.id }}"
                                            data-name="{{ item.name }}"
-                                           ><i
+                                        ><i
                                                 class="fa-solid fa-pen"></i></a>
                                         <!--删除文件夹-->
-                                        <a href="#" class="btn btn-sm btn-light text-danger"><i
+                                        <a class="btn btn-sm btn-light text-danger"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#deleteModal"
+                                           data-act="folder"
+                                           data-fid="{{ item.id }}"
+                                           data-name="{{ item.name }}"
+                                           data-url="{% url 'web:file_del' request.tracer.project.id %}?del_id={{ item.id }}"
+                                        ><i
                                                 class="fa-solid fa-trash"></i></a>
                                     {% else %}
                                         <a href="#" class="btn btn-sm btn-light text-primary"><i
@@ -133,7 +140,7 @@
                         {% csrf_token %}
                         {% for field in form %}
                             <div class="mb-3">
-                                <input type="hidden"  name="fid" id="hid_fid" value="">
+                                <input type="hidden" name="fid" id="hid_fid" value="">
                                 <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
                                 {{ field }}
                                 <!-- 普通输入框下方错误信息块 -->
@@ -149,6 +156,32 @@
             </div>
         </div>
     </div>
+
+
+
+    <!-- 删除文件夹警告框-->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="fa-solid fa-triangle-exclamation"></i> 危险操作
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    确定要删除 <span id="delete_name" class="fw-bold text-danger">文件/文件夹</span> 吗？
+                    <div class="text-muted mt-2" style="font-size: 12px;">此操作不可逆，一旦删除无法找回！</div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="del_file">确认删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 
@@ -156,13 +189,31 @@
 {% block js %}
     <script>
         const newFileModal = document.getElementById('newFileModal')
+        const deleteModal = document.getElementById('deleteModal')
+
         const file_form = document.getElementById('file_form')
         const modelTile = document.getElementById('newFileModalLabel')
         const nameInput = document.getElementById('id_name')    // 表单里名字输入框
+
         const add_file = document.getElementById('add_file')
+        const del_file = document.getElementById('del_file')
+        let delUrl = ''
 
 
-        // 监听模态框
+        // 监听deleteModal模态框
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+
+            const button = event.relatedTarget
+            const act = button.getAttribute('data-act')
+
+            document.getElementById('delete_name').innerText = button.getAttribute('data-name')
+            delUrl = button.getAttribute('data-url')
+
+
+        })
+
+
+        // 监听newFileModal模态框
         // show.bs.modal:这个事件里可以轻松拿到是哪个按钮触发了模态框
         newFileModal.addEventListener('show.bs.modal', function (event) {
 
@@ -214,6 +265,26 @@
                 add_file.disabled = false;
             }
         })
+
+
+        del_file.addEventListener('click', async function () {
+            const originalText = del_file.innerText;
+            del_file.innerText = "检测中...";
+            del_file.disabled = true; // 禁用按钮，变灰！防止狂点！
+
+            let res = await fetch(delUrl)
+            let data = await res.json()
+
+            if (data.status) {
+                location.reload()
+            } else {
+                alert(data.error)
+            }
+            add_file.innerText = originalText;
+            add_file.disabled = false;
+
+        })
+
 
     </script>
 

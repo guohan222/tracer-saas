@@ -32,7 +32,7 @@ urlpatterns = [
 
                                        # file
                                        path('file/', file.file, name='file'),
-                                       # path('file/add/', file.file_add, name='file_add'),
+                                       path('file/del/', file.file_del, name='file_del'),
 
 
 
