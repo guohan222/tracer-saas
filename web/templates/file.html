@@ -18,7 +18,9 @@
                     </div>
                     <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096; cursor: pointer;"
                          data-bs-toggle="modal"
-                         data-bs-target="#newFileModal">
+                         data-bs-target="#newFileModal"
+                         data-act="add"
+                         >
                         <span style="text-decoration: none; color: inherit;"><i
                                 class="fa-solid fa-folder-plus me-1"></i>新建文件夹</span>
                     </div>
@@ -26,12 +28,11 @@
             </div>
 
             <div class="card-body p-4" style="min-height: 75vh;">
-
                 <nav aria-label="breadcrumb" class="mb-3">
                     <ol class="breadcrumb" style="font-size: 14px;">
                         <li class="breadcrumb-item">
                             <a href="{% url 'web:file' proj_id=request.tracer.project.id %}"
-                                                       class="text-decoration-none">
+                               class="text-decoration-none">
                                 <i class="fa-solid fa-house"></i> 文件库</a>
                         </li>
 
@@ -87,8 +88,16 @@
                                 <td class="text-end">
 
                                     {% if item.file_type == 2 %}
-                                        <a href="#" class="btn btn-sm btn-light text-secondary"><i
+                                        <!--编辑文件夹名称-->
+                                        <a class="btn btn-sm btn-light text-secondary"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#newFileModal"
+                                           data-act="edit"
+                                           data-fid = {{ item.id }}
+                                           data-name="{{ item.name }}"
+                                           ><i
                                                 class="fa-solid fa-pen"></i></a>
+                                        <!--删除文件夹-->
                                         <a href="#" class="btn btn-sm btn-light text-danger"><i
                                                 class="fa-solid fa-trash"></i></a>
                                     {% else %}
@@ -103,20 +112,19 @@
                         </tbody>
                     </table>
                 </div>
-
             </div>
+
         </div>
     </div>
 
 
-
-    <!-- 新建文件夹模态框 -->
+    <!-- 公用模态框 -->
     <div class="modal fade" id="newFileModal" tabindex="-1" aria-labelledby="newFileModalLabel"
          aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="newFileModalLabel">新建文件夹</h5>
+                    <h5 class="modal-title" id="newFileModalLabel">新建/编辑</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -125,6 +133,7 @@
                         {% csrf_token %}
                         {% for field in form %}
                             <div class="mb-3">
+                                <input type="hidden"  name="fid" id="hid_fid" value="">
                                 <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
                                 {{ field }}
                                 <!-- 普通输入框下方错误信息块 -->
@@ -132,8 +141,6 @@
                             </div>
                         {% endfor %}
                     </form>
-
-
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
@@ -150,16 +157,36 @@
     <script>
         const newFileModal = document.getElementById('newFileModal')
         const file_form = document.getElementById('file_form')
+        const modelTile = document.getElementById('newFileModalLabel')
+        const nameInput = document.getElementById('id_name')    // 表单里名字输入框
         const add_file = document.getElementById('add_file')
-        const errorBoxs = document.querySelectorAll('.err-msg');
 
 
-        newFileModal.addEventListener('click',()=>{
-            file_form.reset()
-            errorBoxs.forEach(Box => {
-                Box.innerText = ''
-            })
-        })
+        // 监听模态框
+        // show.bs.modal:这个事件里可以轻松拿到是哪个按钮触发了模态框
+        newFileModal.addEventListener('show.bs.modal', function (event) {
+
+                // 获取哪个按钮触发了模态框
+                const button = event.relatedTarget;
+                // 获取按钮上自定义的act属性
+                const act = button.getAttribute('data-act');
+
+                // 清空错误信息
+                document.querySelectorAll('.err-msg').forEach(Box => Box.innerText = '');
+
+                if (act === 'edit') {
+                    modelTile.innerText = '编辑文件夹';
+                    //给隐藏的input框赋值
+                    document.getElementById('hid_fid').value = button.getAttribute('data-fid')
+                    // 获取自定义的data-name属性,内容即待修改的文件夹名字
+                    nameInput.value = button.getAttribute('data-name')
+                } else {
+                    modelTile.innerText = '新建文件';
+                    file_form.reset()
+                }
+            }
+        )
+
 
         add_file.addEventListener('click', async function () {
             const originalText = add_file.innerText;
@@ -167,6 +194,7 @@
             add_file.disabled = true; // 禁用按钮，变灰！防止狂点！
 
             let form_data = new FormData(file_form)
+
             let res = await fetch(location.href, {
                 method: 'POST',
                 body: form_data

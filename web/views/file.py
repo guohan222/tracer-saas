@@ -43,7 +43,17 @@ def file(request, proj_id):
         return render(request, 'file.html', content)
 
     # POST请求添加文件/编辑文件夹
-    form = FileModelForm(request, parent_obj, data=request.POST)
+
+    # 判断是新建文件夹还是编辑文件夹
+    fid = request.POST.get('fid','')
+    edit_obj = None
+    if fid.isdecimal():
+        edit_obj = models.FileRepository.objects.filter(id=fid, project=request.tracer.project.id, file_type=2).first()
+    if edit_obj:
+        form = FileModelForm(request, parent_obj, data=request.POST, instance=edit_obj)
+    else:
+        form = FileModelForm(request, parent_obj, data=request.POST)
+
     if form.is_valid():
         form.instance.project_id = proj_id
         form.instance.file_type = 2
@@ -51,4 +61,5 @@ def file(request, proj_id):
         form.instance.parent = parent_obj
         form.save()
         return JsonResponse({'status': True})
+
     return JsonResponse({'status': False, 'form': form.errors.get_json_data()})
