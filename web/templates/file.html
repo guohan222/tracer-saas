@@ -1,21 +1,23 @@
 {% extends 'layout/manage.html' %}
+{% load static %}
 
 
 {% block content %}
     <div class="container-fluid mt-4">
-
         <div class="card shadow-sm">
+
             <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
                 <div>
                     <i class="fa-solid fa-folder text-warning"></i> 文件库
                 </div>
 
                 <div class="d-flex gap-2">
-                    <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096; cursor: pointer;">
-                        <a href="{% url 'web:wiki_add' proj_id=request.tracer.project.id %}"
-                           style="text-decoration: none; color: inherit;"><i
-                                class="fa-solid fa-cloud-arrow-up me-1"></i>上传文件</a>
-                    </div>
+                    <input type="file" id="upload_file_input" style="display: none;" multiple>
+                    <label for="upload_file_input"
+                           style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096; cursor: pointer; margin-bottom: 0; display: inline-block;">
+                        <i class="fa-solid fa-cloud-arrow-up me-1"></i>上传文件
+                    </label>
+
                     <div style="border: 1px dashed #a0aec0; padding: 2px 12px; border-radius: 4px; font-size: 12px; color: #718096; cursor: pointer;"
                          data-bs-toggle="modal"
                          data-bs-target="#newFileModal"
@@ -28,6 +30,7 @@
             </div>
 
             <div class="card-body p-4" style="min-height: 75vh;">
+                <!--文件栏导航条-->
                 <nav aria-label="breadcrumb" class="mb-3">
                     <ol class="breadcrumb" style="font-size: 14px;">
                         <li class="breadcrumb-item">
@@ -35,18 +38,15 @@
                                class="text-decoration-none">
                                 <i class="fa-solid fa-house"></i> 文件库</a>
                         </li>
-
                         {% for breadcrumb in breadcrumb_list %}
                             <li class="breadcrumb-item" aria-current="page">
                                 <a href="{% url 'web:file' proj_id=request.tracer.project.id %}?folder={{ breadcrumb.id }}"
                                    class="text-decoration-none d-flex align-items-center gap-2">{{ breadcrumb.name }}</a>
                             </li>
                         {% endfor %}
-
-
                     </ol>
                 </nav>
-
+                <!--文件列表-->
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-light text-muted" style="font-size: 13px;">
@@ -187,6 +187,7 @@
 
 
 {% block js %}
+    <script src="{% static 'js/cos-js-sdk-v5.min.js' %}"></script>
     <script>
         const newFileModal = document.getElementById('newFileModal')
         const deleteModal = document.getElementById('deleteModal')
@@ -197,7 +198,10 @@
 
         const add_file = document.getElementById('add_file')
         const del_file = document.getElementById('del_file')
+        const upload_file_input = document.getElementById('upload_file_input')
+
         let delUrl = ''
+        let stsUrl = '{% url 'web:upload_credential' proj_id=request.tracer.project.id%}'     // 后端获取临时密钥接口地址
 
 
         // 监听deleteModal模态框
@@ -283,6 +287,79 @@
             add_file.innerText = originalText;
             add_file.disabled = false;
 
+        })
+
+
+        upload_file_input.addEventListener('change', async function () {
+            // 获取要上传的文件名称&大小
+            const files = this.files
+            let checkFileList = [];
+            if (files.length === 0) return;
+            for (let file of files) {
+                checkFileList.push({'name': file.name, 'size': file.size})
+            }
+
+            // 1. 获取临时凭证：将文件信息传入后端，对订阅使用情况进行判断，从而决定是否给凭证进行上传
+            const response = await fetch(stsUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json'
+                },
+                body: JSON.stringify(checkFileList)
+            });
+            const data = await response.json();
+            console.log(data)
+
+            // 对订阅信息的判断
+
+            // 2. 解构后端组装好的数据
+            const {credentials = {}, startTime, expiredTime, bucket, region} = data.credential_data;
+            const {tmpSecretId, tmpSecretKey, sessionToken} = credentials;
+
+            // 3. 校验参数
+            const params = {tmpSecretId, tmpSecretKey, sessionToken, bucket, region};
+            const emptyParam = Object.keys(params).find(k => !params[k]);
+            if (emptyParam) {
+                // 直接抛出错误，会被最外层的 catch 捕获
+                throw new Error(`参数错误: ${emptyParam} 不能为空`);
+            }
+
+            // 4. 初始化 COS 实例
+            const cos = new COS({
+                SecretId: tmpSecretId,
+                SecretKey: tmpSecretKey,
+                SecurityToken: sessionToken,
+                StartTime: startTime,
+                ExpiredTime: expiredTime,
+            });
+
+            // 5. 执行上传
+            for (let file of files) {
+                // 前端生成唯一 Key (时间戳 + 文件名)
+                let key = (new Date()).getTime() + "_" + file.name;
+
+                // cos.uploadFile(params, callback)
+                    // params是执行腾讯云uploadFile函数的所需参数
+                    // callback函数的第一个参数用来接收uploadFile函数执行中出现的错误
+                    // callback函数的第二个参数用来接收uploadFile函数执行完成后的结果
+                cos.uploadFile({
+                    Bucket: bucket,
+                    Region: region,
+                    Key: key,
+                    Body: file,
+                    onProgress: function (progressData) {
+                        // 打印单个文件的进度
+                        console.log(`[${file.name}] 上传进度:`, (progressData.percent * 100).toFixed(2) + '%');
+                    }
+                }, function (err, uploadData) {
+                    // function:回调,当这个文件传完（或报错）时，腾讯云会自动调用它
+                    if (err) {
+                        console.error(`[${file.name}] 上传崩溃了:`, err);
+                    } else {
+                        console.log(`[${file.name}] 上传成功!`, uploadData);
+                    }
+                });
+            }
         })
 
 

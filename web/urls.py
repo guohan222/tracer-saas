@@ -33,6 +33,7 @@ urlpatterns = [
                                        # file
                                        path('file/', file.file, name='file'),
                                        path('file/del/', file.file_del, name='file_del'),
+                                       path('upload/credential/', file.upload_credential, name='upload_credential'),
 
 
 

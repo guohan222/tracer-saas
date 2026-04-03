@@ -1,11 +1,13 @@
 from qcloud_cos import CosConfig
 from qcloud_cos import CosS3Client
 
+import datetime
+import random
 from django.conf import settings
 
 
 # 创建桶
-def create_bucket(bucket,region='ap-guangzhou'):
+def create_bucket(bucket, region='ap-guangzhou'):
     """
     创建桶
     :param bucket: 桶名
@@ -40,8 +42,15 @@ def create_bucket(bucket,region='ap-guangzhou'):
 
 
 
+
+
+
+
+
+
+
 # 上传文件
-def upload_file(bucket,region,file_obj,key):
+def upload_file(bucket, region, file_obj, key):
     """
     上传文件
     :param bucket: 桶名
@@ -59,6 +68,12 @@ def upload_file(bucket,region,file_obj,key):
     )
 
     return f'https://{bucket}.cos.{region}.myqcloud.com/{key}'
+
+
+
+
+
+
 
 
 
@@ -102,7 +117,7 @@ def credential(bucket, region, key=None):
     credential_data = {
         "bucket": config.get("bucket"),
         "region": config.get("region"),
-        "key": key,
+        # "key": key,
         "startTime": credential_dic.get("startTime"),
         "expiredTime": credential_dic.get("expiredTime"),
         "requestId": credential_dic.get("requestId"),
@@ -119,8 +134,14 @@ def credential(bucket, region, key=None):
 
 
 
+
+
+
+
+
+
 # 删除文件
-def del_file(bucket,region,key):
+def del_file(bucket, region, key):
     config = CosConfig(Region=region, SecretId=settings.TENCENT_COS_ID, SecretKey=settings.TENCENT_COS_KEY)
     client = CosS3Client(config)
 
@@ -133,8 +154,13 @@ def del_file(bucket,region,key):
 
 
 
+
+
+
+
+
 # 删除多个文件
-def del_file_list(bucket,region,key_list):
+def del_file_list(bucket, region, key_list):
     config = CosConfig(Region=region, SecretId=settings.TENCENT_COS_ID, SecretKey=settings.TENCENT_COS_KEY)
     client = CosS3Client(config)
     objects = key_list

@@ -1,3 +1,5 @@
+import json
+
 from web import models
 from web.forms.file import FileModelForm
 from utils.tencent import cos
@@ -5,6 +7,7 @@ from utils.tencent import cos
 from django.forms import model_to_dict
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 
 # 展示文件&文件夹导航、新增&编辑文件夹
@@ -109,6 +112,17 @@ def file_del(request,proj_id):
     # 在数据库中删除该文件
     del_obj.delete()
     return JsonResponse({'status':True})
+
+
+
+@csrf_exempt
+# 获取凭证
+def upload_credential(request,proj_id):
+    check_file_list = json.loads(request.body)
+    print(check_file_list)
+    credential_data = cos.credential(request.tracer.project.bucket, request.tracer.project.region)
+    return JsonResponse({'status':True,'credential_data':credential_data})
+
 
 
 

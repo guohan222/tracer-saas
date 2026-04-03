@@ -20,18 +20,21 @@
 <script>
 
     // 上传文件，file 为选择的文件
-    async function upload(file) {
-        // 注意：这里换成你 Django 后端的真实临时密钥接口地址
-        const stsUrl = `{% url 'app01:test_credential' %}?filename=${file.name}`;
+    async function upload() {
+        // 获取文件
+        const files = this.files
+        if (files.length === 0) return;
+
 
         try {
-            // 1. 获取临时凭证 (告别 .then 嵌套，直接同步等待)
-            const response = await fetch(stsUrl);
+            // 1. 获取临时凭证
+            const response = await fetch(stsUrl, {
+                method: 'POST',
+                body: files
+            });
             const data = await response.json();
 
-            console.log('getKeyAndCredentials:', data);
-
-            // 2. 解构后端组装好的大礼包
+            // 2. 解构后端组装好的数据
             const {credentials = {}, startTime, expiredTime, bucket, region, key} = data;
             const {tmpSecretId, tmpSecretKey, sessionToken} = credentials;
 
@@ -64,7 +67,7 @@
                     Bucket: bucket,
                     Region: region,
                     Key: key,
-                    Body: file,
+                    Body: files,
                     onProgress: function (progressData) {
                         console.log('上传进度：', progressData);
                     }
