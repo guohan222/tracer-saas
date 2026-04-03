@@ -26,8 +26,8 @@ class Product(models.Model):
     money = models.IntegerField(verbose_name='价格/年')
     max_project = models.IntegerField(verbose_name='允许最大项目个数')
     max_member = models.IntegerField(verbose_name='允许最多成员')
-    max_storage = models.PositiveIntegerField(verbose_name='单项目最大存储空间')
-    max_send = models.PositiveIntegerField(verbose_name='单次上传文件最大限制')
+    max_storage = models.PositiveIntegerField(verbose_name='单项目最大存储空间', help_text='G')
+    max_send = models.PositiveIntegerField(verbose_name='单次上传文件最大限制', help_text='M')
 
     cate_datetime = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
 
@@ -39,7 +39,7 @@ class Subscribe(models.Model):
         (2, '已支付'),
     )
     status = models.SmallIntegerField(verbose_name='订阅状态', choices=status_choice)
-    order = models.CharField(verbose_name='订单号', max_length=64, unique=True)
+    order = models.CharField(verbose_name='订单号', max_length=64, unique=True)  # 唯一索引
     product = models.ForeignKey('Product', verbose_name='产品', default=1, on_delete=models.SET_NULL, null=True,
                                 blank=True)
     user = models.ForeignKey('User', verbose_name='用户', on_delete=models.CASCADE)
@@ -76,14 +76,14 @@ class Project(models.Model):
     color = models.SmallIntegerField(verbose_name='项目颜色', choices=color_choice, default=1)
     describe = models.TextField(verbose_name='项目描述', null=True, blank=True)
     star = models.BooleanField(verbose_name='星标项目', default=False)
-    used_storage = models.PositiveIntegerField(verbose_name='已使用的存储空间', default=0)
+    used_storage = models.PositiveIntegerField(verbose_name='已使用的存储空间', default=0, help_text='字节')
 
     creator = models.ForeignKey('User', verbose_name='项目创建者', on_delete=models.CASCADE)
     join_count = models.IntegerField(verbose_name='参与人数', default=1)
     create_datetime = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
 
-    bucket = models.CharField(verbose_name='cos桶名',max_length=128)
-    region = models.CharField(verbose_name='cos区域',max_length=32)
+    bucket = models.CharField(verbose_name='cos桶名', max_length=128)
+    region = models.CharField(verbose_name='cos区域', max_length=32)
 
 
 # 项目参与者表
@@ -94,35 +94,34 @@ class Participants(models.Model):
     create_datetime = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
 
 
-
 # wiki表
 class Wiki(models.Model):
-    project = models.ForeignKey(verbose_name='所属项目',to='Project',on_delete=models.CASCADE)
-    title = models.CharField(verbose_name='文章名',max_length=32)
+    project = models.ForeignKey(verbose_name='所属项目', to='Project', on_delete=models.CASCADE)
+    title = models.CharField(verbose_name='文章名', max_length=32)
     content = models.TextField(verbose_name='文章内容')
-    depth = models.IntegerField(verbose_name='深度',default=1)
+    depth = models.IntegerField(verbose_name='深度', default=1)
 
-    parent = models.ForeignKey(verbose_name='父文章',to='Wiki',null=True,blank=True,on_delete=models.CASCADE,related_name='children')
+    parent = models.ForeignKey(verbose_name='父文章', to='Wiki', null=True, blank=True, on_delete=models.CASCADE,
+                               related_name='children')
 
     def __str__(self):
         return self.title
 
 
-
 # 文件管理表
 class FileRepository(models.Model):
     file_type_choices = {
-        (1,'文件'),
-        (2,'文件夹'),
+        (1, '文件'),
+        (2, '文件夹'),
     }
-    project = models.ForeignKey(verbose_name='项目',to='Project',on_delete=models.CASCADE)
-    file_type = models.SmallIntegerField(verbose_name='类型',choices=file_type_choices)
-    name = models.CharField(verbose_name='文件夹/文件名', max_length=32)
+    project = models.ForeignKey(verbose_name='项目', to='Project', on_delete=models.CASCADE)
+    file_type = models.SmallIntegerField(verbose_name='类型', choices=file_type_choices)
+    name = models.CharField(verbose_name='文件夹名称', max_length=32, help_text='文件/文件夹名称')
     key = models.CharField(verbose_name='cos中名称', max_length=128, null=True, blank=True)
-    file_size = models.IntegerField(verbose_name='文件大小',null=True,blank=True)
-    file_path = models.CharField(verbose_name='文件路径',max_length=255,null=True,blank=True)
-    parent = models.ForeignKey(verbose_name='父目录',to='FileRepository',on_delete=models.CASCADE,null=True,blank=True,related_name='children')
+    file_size = models.BigIntegerField(verbose_name='文件大小', null=True, blank=True, help_text='字节')
+    file_path = models.CharField(verbose_name='文件路径', max_length=255, null=True, blank=True)
+    parent = models.ForeignKey(verbose_name='父目录', to='FileRepository', on_delete=models.CASCADE, null=True,
+                               blank=True, related_name='children')
 
-    update_user = models.ForeignKey(verbose_name='最近更新者',to='User',on_delete=models.CASCADE)
-    update_datetime = models.DateTimeField(verbose_name='更新时间',auto_now=True)
-
+    update_user = models.ForeignKey(verbose_name='最近更新者', to='User', on_delete=models.CASCADE)
+    update_datetime = models.DateTimeField(verbose_name='更新时间', auto_now=True)

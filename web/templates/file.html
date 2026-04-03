@@ -309,56 +309,60 @@
             });
             const data = await response.json();
             console.log(data)
+            if (!data.status) {
+                alert(data.error)
+            } else {
+                // 2. 解构后端组装好的数据
+                const {credentials = {}, startTime, expiredTime, bucket, region} = data.credential_data;
+                const {tmpSecretId, tmpSecretKey, sessionToken} = credentials;
 
-            // 对订阅信息的判断
+                // 3. 校验参数
+                const params = {tmpSecretId, tmpSecretKey, sessionToken, bucket, region};
+                const emptyParam = Object.keys(params).find(k => !params[k]);
+                if (emptyParam) {
+                    // 直接抛出错误，会被最外层的 catch 捕获
+                    throw new Error(`参数错误: ${emptyParam} 不能为空`);
+                }
 
-            // 2. 解构后端组装好的数据
-            const {credentials = {}, startTime, expiredTime, bucket, region} = data.credential_data;
-            const {tmpSecretId, tmpSecretKey, sessionToken} = credentials;
+                // 4. 初始化 COS 实例
+                const cos = new COS({
+                    SecretId: tmpSecretId,
+                    SecretKey: tmpSecretKey,
+                    SecurityToken: sessionToken,
+                    StartTime: startTime,
+                    ExpiredTime: expiredTime,
+                });
 
-            // 3. 校验参数
-            const params = {tmpSecretId, tmpSecretKey, sessionToken, bucket, region};
-            const emptyParam = Object.keys(params).find(k => !params[k]);
-            if (emptyParam) {
-                // 直接抛出错误，会被最外层的 catch 捕获
-                throw new Error(`参数错误: ${emptyParam} 不能为空`);
-            }
+                // 5. 执行上传
+                for (let file of files) {
+                    // 前端生成唯一 Key (时间戳 + 文件名)
+                    let key = (new Date()).getTime() + "_" + file.name;
 
-            // 4. 初始化 COS 实例
-            const cos = new COS({
-                SecretId: tmpSecretId,
-                SecretKey: tmpSecretKey,
-                SecurityToken: sessionToken,
-                StartTime: startTime,
-                ExpiredTime: expiredTime,
-            });
-
-            // 5. 执行上传
-            for (let file of files) {
-                // 前端生成唯一 Key (时间戳 + 文件名)
-                let key = (new Date()).getTime() + "_" + file.name;
-
-                // cos.uploadFile(params, callback)
+                    // cos.uploadFile(params, callback)
                     // params是执行腾讯云uploadFile函数的所需参数
                     // callback函数的第一个参数用来接收uploadFile函数执行中出现的错误
                     // callback函数的第二个参数用来接收uploadFile函数执行完成后的结果
-                cos.uploadFile({
-                    Bucket: bucket,
-                    Region: region,
-                    Key: key,
-                    Body: file,
-                    onProgress: function (progressData) {
-                        // 打印单个文件的进度
-                        console.log(`[${file.name}] 上传进度:`, (progressData.percent * 100).toFixed(2) + '%');
-                    }
-                }, function (err, uploadData) {
-                    // function:回调,当这个文件传完（或报错）时，腾讯云会自动调用它
-                    if (err) {
-                        console.error(`[${file.name}] 上传崩溃了:`, err);
-                    } else {
-                        console.log(`[${file.name}] 上传成功!`, uploadData);
-                    }
-                });
+                    cos.uploadFile({
+                        Bucket: bucket,
+                        Region: region,
+                        Key: key,
+                        Body: file,
+                        onProgress: function (progressData) {
+                            // 打印单个文件的进度
+                            console.log(`[${file.name}] 上传进度:`, (progressData.percent * 100).toFixed(2) + '%');
+                        }
+                    }, function (err, uploadData) {
+                        // function:回调,当这个文件传完（或报错）时，腾讯云会自动调用它
+                        if (err) {
+                            console.error(`[${file.name}] 上传崩溃了:`, err);
+                        } else {
+                            console.log(`[${file.name}] 上传成功!`, uploadData);
+                        }
+                    });
+                }
+
+                // 6. 清空upload_file_input里面的值，避免因为下次值没变导致change事件没有调用
+                this.value = ''
             }
         })
 

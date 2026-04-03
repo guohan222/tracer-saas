@@ -38,7 +38,7 @@ def file(request, proj_id):
         # 当前目录下的所有文件
         data_list = models.FileRepository.objects.filter(project=request.tracer.project.id, parent=parent_obj).order_by(
             '-file_type')
-        form = FileModelForm(request,parent_obj)
+        form = FileModelForm(request, parent_obj)
 
         content = {
             'breadcrumb_list': breadcrumb_list,
@@ -50,7 +50,7 @@ def file(request, proj_id):
     # POST请求添加文件/编辑文件夹
 
     # 判断是新建文件夹还是编辑文件夹
-    fid = request.POST.get('fid','')
+    fid = request.POST.get('fid', '')
     edit_obj = None
     if fid.isdecimal():
         edit_obj = models.FileRepository.objects.filter(id=fid, project=request.tracer.project.id, file_type=2).first()
@@ -70,9 +70,8 @@ def file(request, proj_id):
     return JsonResponse({'status': False, 'form': form.errors.get_json_data()})
 
 
-
 # 删除文件
-def file_del(request,proj_id):
+def file_del(request, proj_id):
     del_id = request.GET.get('del_id')
     del_obj = models.FileRepository.objects.filter(project_id=proj_id, id=del_id).first()
 
@@ -83,27 +82,27 @@ def file_del(request,proj_id):
         request.tracer.project.save()
 
         # cos中删除文件
-        cos.del_file(request.tracer.project.bucket,request.tracer.project.region,del_obj.key)
+        cos.del_file(request.tracer.project.bucket, request.tracer.project.region, del_obj.key)
 
         # 在数据库中删除该文件
         del_obj.delete()
-        return JsonResponse({'status':True})
+        return JsonResponse({'status': True})
 
     # 用户删除整个目录
     files_size = 0
-    key_list =[]
+    key_list = []
     folder_list = []
     for folder in folder_list:
-        children_list = models.FileRepository.objects.filter(project_id=proj_id,parent=folder).order_by('-file_type')
+        children_list = models.FileRepository.objects.filter(project_id=proj_id, parent=folder).order_by('-file_type')
         for item in children_list:
             if item.file_type == 2:
                 folder_list.append(item)
             else:
                 files_size += item.file_size
-                key_list.append({'key':item.key})
+                key_list.append({'key': item.key})
 
     if key_list:
-        cos.del_file_list(request.tracer.project.bucket,request.tracer.project.region,key_list)
+        cos.del_file_list(request.tracer.project.bucket, request.tracer.project.region, key_list)
 
     if files_size:
         request.tracer.project.used_storage -= del_obj.file_size
@@ -111,28 +110,32 @@ def file_del(request,proj_id):
 
     # 在数据库中删除该文件
     del_obj.delete()
-    return JsonResponse({'status':True})
+    return JsonResponse({'status': True})
 
 
-
-@csrf_exempt
 # 获取凭证
-def upload_credential(request,proj_id):
+@csrf_exempt
+def upload_credential(request, proj_id):
+    # 该产品单项目最大存储空间 G
+    total_file_limit = request.tracer.product.max_storage * 1024 * 1024 * 1024
+    # 该产品单次上传文件大小限制 MB
+    send_file_limit = request.tracer.product.max_send * 1024 * 1024
+
+    # 文件列表 [{name,size},]
     check_file_list = json.loads(request.body)
-    print(check_file_list)
+    # 总文件大小
+    total_size = 0
+    for item in check_file_list:
+        if item['size'] > send_file_limit:
+            msg = f'单文件上传超出限制（最大{request.tracer.product.max_send}M），文件：{item['size']}，请升级套餐!'
+            return JsonResponse({'status': False, 'error':msg})
+        else:
+            total_size += item['size']
+
+    # 该项目已使用的存储空间
+    used_storage = request.tracer.project.used_storage
+    if total_size + used_storage > total_file_limit:
+        return JsonResponse({'status': False, 'error': "该项目容量超过限制，请升级套餐！"})
+
     credential_data = cos.credential(request.tracer.project.bucket, request.tracer.project.region)
-    return JsonResponse({'status':True,'credential_data':credential_data})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return JsonResponse({'status': True, 'credential_data': credential_data})
