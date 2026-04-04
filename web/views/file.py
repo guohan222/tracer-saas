@@ -93,7 +93,7 @@ def file_del(request, proj_id):
     # 用户删除整个目录
     files_size = 0
     key_list = []
-    folder_list = []
+    folder_list = [del_obj, ]
     for folder in folder_list:
         children_list = models.FileRepository.objects.filter(project_id=proj_id, parent=folder).order_by('-file_type')
         for item in children_list:
@@ -101,14 +101,14 @@ def file_del(request, proj_id):
                 folder_list.append(item)
             else:
                 files_size += item.file_size
-                key_list.append({'key': item.key})
+                key_list.append({'Key': item.key})
 
     if key_list:
         cos.del_file_list(request.tracer.project.bucket, request.tracer.project.region, key_list)
 
     if files_size:
-        request.tracer.project.used_storage -= del_obj.file_size
-        request.tracer.project.save()
+        request.tracer.project.used_storage = F('used_storage') - files_size
+        request.tracer.project.save(update_fields=['used_storage'])
 
     # 在数据库中删除该文件
     del_obj.delete()

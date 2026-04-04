@@ -192,6 +192,13 @@
     </div>
 
 
+
+    <!-- 文件上传中提示框-->
+    <div id="uploadingToast"
+         style="position: fixed; top: 30px; left: 50%; transform: translateX(-50%); background-color: #fff; border-left: 4px solid #1677ff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 12px 24px; border-radius: 4px; display: none; z-index: 9999; font-size: 14px; color: #333; align-items: center;">
+        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px; color: #1677ff;"></i>
+        <span id="uploadingMsg">文件上传中...</span>
+    </div>
     <!-- 文件上传成功提示框-->
     <div id="successToast"
          style="position: fixed; top: 30px; left: 50%; transform: translateX(-50%); background-color: #fff; border-left: 4px solid #52c41a; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 12px 24px; border-radius: 4px; display: none; z-index: 9999; font-size: 14px; color: #333; align-items: center;">
@@ -320,6 +327,18 @@
             }, 1500);
         }
 
+        // 显示上传中提示框
+        function showUploadingToast(message) {
+            const toast = document.getElementById('uploadingToast');
+            document.getElementById('uploadingMsg').innerText = message;
+            toast.style.display = 'flex';
+        }
+
+        // 隐藏上传中提示框
+        function hideUploadingToast() {
+            document.getElementById('uploadingToast').style.display = 'none';
+        }
+
 
         upload_file_input.addEventListener('change', async function () {
             // 获取要上传的文件名称&大小
@@ -368,6 +387,7 @@
                 let successCount = 0
                 let completeCount = 0
 
+                showUploadingToast(`正在上传 ${totalFiles} 个文件，请稍候...`);
                 // 5. 执行上传
                 for (let file of files) {
                     // 前端生成唯一 Key (时间戳 + 文件名)
@@ -388,7 +408,6 @@
                         completeCount++
                         if (uploadData && uploadData.statusCode === 200) {
                             // uploadData：{statusCode: 200, headers: {…}, Location: 'file_path', ETag: 'xxx', RequestId: 'xxx'}
-                            console.log(`[${file.name}] 上传成功!`, uploadData);
                             successCount++
                             // 数据写入数据库
                             let res = await fetch('{% url 'web:file_add' proj_id=request.tracer.project.id %}', {
@@ -414,6 +433,7 @@
 
                         }
                         if (completeCount === totalFiles) {
+                            hideUploadingToast();
                             if (successCount === totalFiles) {
                                 showSuccessToast(`成功上传 ${successCount} 个文件`)
                             } else {
