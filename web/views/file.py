@@ -7,6 +7,7 @@ from utils.tencent import cos
 from django.forms import model_to_dict
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.db.models import F
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -172,9 +173,10 @@ def file_add(request, proj_id):
         new_data.pop('ETag')
         new_data.update({'project_id':proj_id,'file_type':1,'update_user_id':request.tracer.user.id})
         instance = models.FileRepository.objects.create(**new_data)
-        # 减少该项目存储空间
-        request.tracer.project.used_storage += new_data['file_size']
-        request.tracer.project.save()
+        # 减少该项目存储空间,
+        # F避免并发问题，直接在数据库层面修改数据
+        request.tracer.project.used_storage = F('used_storage') + new_data['file_size']
+        request.tracer.project.save(update_fields=['used_storage'])
         return JsonResponse({'status':True})
     print(form.errors)
     return JsonResponse({'status':False,'error':form.errors.get_json_data()})

@@ -174,6 +174,8 @@ def del_file_list(bucket, region, key_list):
 
 
 
+
+
 # 检查文件是否存在
 def check_file(bucket, region, key):
     config = CosConfig(Region=region, SecretId=settings.TENCENT_COS_ID, SecretKey=settings.TENCENT_COS_KEY)
