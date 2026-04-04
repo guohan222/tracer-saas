@@ -76,7 +76,7 @@ class Project(models.Model):
     color = models.SmallIntegerField(verbose_name='项目颜色', choices=color_choice, default=1)
     describe = models.TextField(verbose_name='项目描述', null=True, blank=True)
     star = models.BooleanField(verbose_name='星标项目', default=False)
-    used_storage = models.PositiveIntegerField(verbose_name='已使用的存储空间', default=0, help_text='字节')
+    used_storage = models.BigIntegerField(verbose_name='已使用的存储空间', default=0, help_text='字节')
 
     creator = models.ForeignKey('User', verbose_name='项目创建者', on_delete=models.CASCADE)
     join_count = models.IntegerField(verbose_name='参与人数', default=1)

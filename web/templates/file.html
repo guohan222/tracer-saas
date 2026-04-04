@@ -182,6 +182,15 @@
             </div>
         </div>
     </div>
+
+
+    <!-- 文件上传成功提示框-->
+    <div id="successToast"
+         style="position: fixed; top: 30px; left: 50%; transform: translateX(-50%); background-color: #fff; border-left: 4px solid #52c41a; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 12px 24px; border-radius: 4px; display: none; z-index: 9999; font-size: 14px; color: #333; align-items: center;">
+        <i class="fa-solid fa-circle-check" style="margin-right: 8px; color: #52c41a;"></i>
+        <span id="toastMsg">上传成功</span>
+    </div>
+
 {% endblock %}
 
 
@@ -200,6 +209,7 @@
         const del_file = document.getElementById('del_file')
         const upload_file_input = document.getElementById('upload_file_input')
 
+        let current_folder_id = '{{ parent_id }}'
         let delUrl = ''
         let stsUrl = '{% url 'web:upload_credential' proj_id=request.tracer.project.id%}'     // 后端获取临时密钥接口地址
 
@@ -290,6 +300,20 @@
         })
 
 
+        // 上传文件成功弹出框
+        function showSuccessToast(message) {
+            const toast = document.getElementById('successToast');
+            document.getElementById('toastMsg').innerText = message;
+
+            toast.style.display = 'flex'; // 让它显现出来
+
+            // 设定一个定时器，3秒 (3000毫秒) 后自动消失
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+
         upload_file_input.addEventListener('change', async function () {
             // 获取要上传的文件名称&大小
             const files = this.files
@@ -333,15 +357,16 @@
                     ExpiredTime: expiredTime,
                 });
 
+                let totalFiles = files.length
+                let successCount = 0
+                let completeCount = 0
+
                 // 5. 执行上传
                 for (let file of files) {
                     // 前端生成唯一 Key (时间戳 + 文件名)
                     let key = (new Date()).getTime() + "_" + file.name;
 
                     // cos.uploadFile(params, callback)
-                    // params是执行腾讯云uploadFile函数的所需参数
-                    // callback函数的第一个参数用来接收uploadFile函数执行中出现的错误
-                    // callback函数的第二个参数用来接收uploadFile函数执行完成后的结果
                     cos.uploadFile({
                         Bucket: bucket,
                         Region: region,
@@ -351,18 +376,50 @@
                             // 打印单个文件的进度
                             console.log(`[${file.name}] 上传进度:`, (progressData.percent * 100).toFixed(2) + '%');
                         }
-                    }, function (err, uploadData) {
-                        // function:回调,当这个文件传完（或报错）时，腾讯云会自动调用它
-                        if (err) {
-                            console.error(`[${file.name}] 上传崩溃了:`, err);
-                        } else {
+                    }, async function (err, uploadData) {
+                        // function:回调,当文件传完（或报错）时，腾讯云会自动调用它
+                        completeCount++
+                        if (uploadData && uploadData.statusCode === 200) {
+                            // uploadData：{statusCode: 200, headers: {…}, Location: 'file_path', ETag: 'xxx', RequestId: 'xxx'}
                             console.log(`[${file.name}] 上传成功!`, uploadData);
+                            successCount++
+                            // 数据写入数据库
+                            let res = await fetch('{% url 'web:file_add' proj_id=request.tracer.project.id %}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    "name": file.name,
+                                    "key": key,
+                                    "file_size": file.size,
+                                    "file_path": uploadData.Location,
+                                    "parent": current_folder_id,
+                                    "ETag": uploadData.ETag
+                                })
+                            })
+
+                            let data = await res.json()
+                            console.log(data)
+
+
+                            // 动态展示数据
+
+                        } else {
+                            console.error(`[${file.name}] 上传崩溃了:`, err);
+
                         }
+                        if (completeCount === totalFiles) {
+                            if (successCount === totalFiles) {
+                                showSuccessToast(`成功上传 ${successCount} 个文件`)
+                            } else {
+                                showSuccessToast(`上传结束：成功 ${successCount} 个，失败 ${totalFiles - successCount} 个`)
+                            }
+                        }
+                        // 6. 清空upload_file_input里面的值，避免因为下次值没变导致change事件没有调用
+                        upload_file_input.value = '';
                     });
                 }
-
-                // 6. 清空upload_file_input里面的值，避免因为下次值没变导致change事件没有调用
-                this.value = ''
             }
         })
 

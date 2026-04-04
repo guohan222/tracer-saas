@@ -34,6 +34,8 @@ urlpatterns = [
                                        path('file/', file.file, name='file'),
                                        path('file/del/', file.file_del, name='file_del'),
                                        path('upload/credential/', file.upload_credential, name='upload_credential'),
+                                       path('file/add/', file.file_add, name='file_add'),
+
 
 
 

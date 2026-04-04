@@ -196,7 +196,7 @@
         const add_proj = document.getElementById('add_proj')
         const errorBoxs = document.querySelectorAll('.err-msg');
 
-        newProjectModal.addEventListener('click', () => {
+        newProjectModal.addEventListener('show.bs.modal', () => {
             proj_form.reset()
             errorBoxs.forEach(Box => {
                 Box.innerText = ''

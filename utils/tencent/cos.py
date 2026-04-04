@@ -170,3 +170,18 @@ def del_file_list(bucket, region, key_list):
             'Object': objects
         }
     )
+
+
+
+
+# 检查文件是否存在
+def check_file(bucket, region, key):
+    config = CosConfig(Region=region, SecretId=settings.TENCENT_COS_ID, SecretKey=settings.TENCENT_COS_KEY)
+    client = CosS3Client(config)
+
+    data = client.head_object(
+        Bucket=bucket,
+        Key=key
+    )
+
+    return data

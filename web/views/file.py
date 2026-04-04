@@ -1,7 +1,7 @@
 import json
 
 from web import models
-from web.forms.file import FileModelForm
+from web.forms.file import FolderModelForm, FileModelForm
 from utils.tencent import cos
 
 from django.forms import model_to_dict
@@ -38,12 +38,13 @@ def file(request, proj_id):
         # 当前目录下的所有文件
         data_list = models.FileRepository.objects.filter(project=request.tracer.project.id, parent=parent_obj).order_by(
             '-file_type')
-        form = FileModelForm(request, parent_obj)
+        form = FolderModelForm(request, parent_obj)
 
         content = {
             'breadcrumb_list': breadcrumb_list,
             'data_list': data_list,
-            'form': form
+            'form': form,
+            'parent_id': folder_id
         }
         return render(request, 'file.html', content)
 
@@ -55,9 +56,9 @@ def file(request, proj_id):
     if fid.isdecimal():
         edit_obj = models.FileRepository.objects.filter(id=fid, project=request.tracer.project.id, file_type=2).first()
     if edit_obj:
-        form = FileModelForm(request, parent_obj, data=request.POST, instance=edit_obj)
+        form = FolderModelForm(request, parent_obj, data=request.POST, instance=edit_obj)
     else:
-        form = FileModelForm(request, parent_obj, data=request.POST)
+        form = FolderModelForm(request, parent_obj, data=request.POST)
 
     if form.is_valid():
         form.instance.project_id = proj_id
@@ -122,13 +123,13 @@ def upload_credential(request, proj_id):
     send_file_limit = request.tracer.product.max_send * 1024 * 1024
 
     # 文件列表 [{name,size},]
-    check_file_list = json.loads(request.body)
+    check_file_list = json.loads(request.body.decode('utf-8'))
     # 总文件大小
     total_size = 0
     for item in check_file_list:
         if item['size'] > send_file_limit:
             msg = f'单文件上传超出限制（最大{request.tracer.product.max_send}M），文件：{item['size']}，请升级套餐!'
-            return JsonResponse({'status': False, 'error':msg})
+            return JsonResponse({'status': False, 'error': msg})
         else:
             total_size += item['size']
 
@@ -139,3 +140,43 @@ def upload_credential(request, proj_id):
 
     credential_data = cos.credential(request.tracer.project.bucket, request.tracer.project.region)
     return JsonResponse({'status': True, 'credential_data': credential_data})
+
+
+# 添加前端向cos上传成功的文件信息
+@csrf_exempt
+def file_add(request, proj_id):
+    """
+    body: JSON.stringify({
+        "name": file.name,
+        "key": key,
+        "file_size": file.size,
+        "file_path": uploadData.Location,  （桶.cos.区域.myqcloud.com/图片路径）
+        "parent": current_folder_id,
+        "ETag": uploadData.Etag
+    })
+    """
+
+    data = json.loads(request.body.decode('utf-8'))
+    form = FileModelForm(request,data=data)
+    if form.is_valid():
+        """
+        form.instance.project_id = proj_id
+        form.instance.file_type = 1
+        instance = form.save()
+        # 通过ModelForm保存到数据库中的数据返回的instance对象，无法通过get_choice字段_display获取choice中的中文
+        # 即无法通过instance.get_file_type_display获取file_type的中文
+        """
+
+        # 清洗过后的数据
+        new_data = form.cleaned_data
+        new_data.pop('ETag')
+        new_data.update({'project_id':proj_id,'file_type':1,'update_user_id':request.tracer.user.id})
+        instance = models.FileRepository.objects.create(**new_data)
+        # 减少该项目存储空间
+        request.tracer.project.used_storage += new_data['file_size']
+        request.tracer.project.save()
+        return JsonResponse({'status':True})
+    print(form.errors)
+    return JsonResponse({'status':False,'error':form.errors.get_json_data()})
+
+
