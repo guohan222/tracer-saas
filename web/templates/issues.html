@@ -1,1 +1,321 @@
 {% extends 'layout/manage.html' %}
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'plugin/flatpickr/flatpickr.min.css' %}">
+
+    <link rel="stylesheet" href="{% static 'plugin/tom-select/css/tom-select.bootstrap5.min.css' %}">
+
+    <link rel="stylesheet" href="{% static 'plugin/vditor/index.css' %}">
+
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid px-4 mt-4">
+        <div class="row">
+
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light text-muted fw-bold py-2" style="font-size: 15px;">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> 筛选
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-0" style="font-size: 14px;">筛选选项</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="card shadow-sm border-0">
+
+                    <div class="card-header bg-light text-muted fw-bold py-2" style="font-size: 15px;">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> 问题
+                    </div>
+
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <button class="btn btn-success btn-sm px-3" style="border-radius: 3px;"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#newIssuesModal"
+                                    data-act='add'
+                            >新建问题
+                            </button>
+
+
+                            <button class="btn btn-primary btn-sm px-3" style="border-radius: 3px;"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#newIssuesModal"
+                                    data-act='invite'
+                            >邀请成员
+                            </button>
+                        </div>
+
+                        <div class="list-group">
+
+                            <div class="list-group-item py-3">
+                                <div class="d-flex align-items-center mb-2">
+                                <span class="me-2 text-danger" style="font-size: 12px;">
+                                    <i class="fa-solid fa-circle"></i>
+                                </span>
+                                    <span class="fw-bold text-primary me-3" style="font-size: 15px;">
+                                    #010
+                                </span>
+                                    <a href="#" class="text-decoration-none text-dark fw-bold" style="font-size: 15px;">
+                                        测试问题 (原：去死)
+                                    </a>
+                                </div>
+
+                                <div class="d-flex align-items-center text-muted"
+                                     style="font-size: 13px; margin-left: 24px;">
+                                    <span class="badge bg-primary text-white me-3 px-2 py-1">功能</span>
+
+                                    <span class="me-3">
+                                    <i class="fa-solid fa-arrows-rotate me-1"></i> 已解决
+                                </span>
+
+                                    <span class="me-3">
+                                    <i class="fa-regular fa-user me-1"></i> wupeiqi
+                                </span>
+
+                                    <span>
+                                    <i class="fa-regular fa-clock me-1"></i> 2020年3月30日 11:26 更新
+                                </span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <nav aria-label="Page navigation" class="mt-4">
+                            <ul class="pagination pagination-sm m-0">
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">«</a>
+                                </li>
+                                <li class="page-item active" aria-current="page">
+                                    <a class="page-link" href="#">1</a>
+                                </li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item"><a class="page-link" href="#">4</a></li>
+                                <li class="page-item"><a class="page-link" href="#">5</a></li>
+                                <li class="page-item">
+                                    <a class="page-link" href="#">»</a>
+                                </li>
+                            </ul>
+                        </nav>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <!-- 公用模态框 -->
+    <div class="modal fade modal-lg" id="newIssuesModal" tabindex="-1" aria-labelledby="newIssuesModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newIssuesModalLabel">新建/编辑问题</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="" method="post" id="file_form">
+                        {% csrf_token %}
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.issues_type.label }}</label>
+                                {{ form.issues_type }}
+                                <span class="err-msg text-danger" style="font-size: 12px;"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.module.label }}</label>
+                                {{ form.module }}
+                                <span class="err-msg text-danger" style="font-size: 12px;"></span>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">{{ form.subject.label }}</label>
+                                {{ form.subject }}
+                                <span class="err-msg text-danger" style="font-size: 12px;"></span>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">{{ form.desc.label }}</label>
+                                {{ form.desc }}
+                                <span class="err-msg text-danger" style="font-size: 12px;"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.status.label }}</label>
+                                {{ form.status }}
+                                <span class="err-msg text-danger" style="font-size: 12px;"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.priority.label }}</label>
+                                {{ form.priority }}
+                                <span class="err-msg text-danger" style="font-size: 12px;"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.assign.label }}</label>
+                                {{ form.assign }}
+                                <span class="err-msg text-danger" style="font-size: 12px;"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.attention.label }}</label>
+                                {{ form.attention }}
+                                <span class="err-msg text-danger" style="font-size: 12px;"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.start_date.label }}</label>
+                                {{ form.start_date }}
+                                <span class="err-msg text-danger" style="font-size: 12px;"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.end_date.label }}</label>
+                                {{ form.end_date }}
+                                <span class="err-msg text-danger" style="font-size: 12px;"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.mode.label }}</label>
+                                {{ form.mode }}
+                                <span class="err-msg text-danger" style="font-size: 12px;"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">{{ form.parent.label }}</label>
+                                {{ form.parent }}
+                                <span class="err-msg text-danger" style="font-size: 12px;"></span>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">取 消</button>
+                    <button type="button" class="btn btn-primary" id="confirm_button">确 定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+
+{% block js %}
+    <script src="{% static 'plugin/vditor/index.min.js' %}"></script>
+    <script src="{% static 'plugin/tom-select/js/tom-select.complete.min.js' %}"></script>
+    <script src="{% static 'plugin/flatpickr/flatpickr.min.js' %}"></script>
+    <script src="{% static 'plugin/flatpickr/l10n/zh.js' %}"></script>
+
+    <script>
+        const newIssuesModal = document.getElementById('newIssuesModal')
+        const modelTile = document.getElementById('newIssuesModalLabel')
+        const confirm_button = document.getElementById('confirm_button')
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // 场景 A：纯日期选择 (年-月-日)
+            flatpickr(".date-picker", {
+                locale: "zh",          // 使用中文语言包
+                dateFormat: "Y-m-d",   // 格式化输出到 input 框的值
+                minDate: "today",      // 常用防御配置：禁止选择今天以前的日子
+            });
+
+            // 场景 A：单选 + 搜索模式
+            document.querySelectorAll('.tom-select-single').forEach((el) => {
+                new TomSelect(el, {
+                    create: false,         // false=只允许选列表中有的，true=允许用户自己输入新值打标签
+                    placeholder: "请点击并搜索...",
+                    sortField: {           // 选项按照文本内容排序
+                        field: "text",
+                        direction: "asc"
+                    }
+                });
+            });
+
+            // 场景 B：多选 + 标签化管理 (带关闭按钮)
+            document.querySelectorAll('.tom-select-multiple').forEach((el) => {
+                new TomSelect(el, {
+                    create: false,
+                    placeholder: "请选择多项...",
+                    plugins: ['remove_button'], // 核心插件：让选中的标签带有 x 删除按钮
+                });
+            });
+
+            // 1. 找到 Django 渲染出来的原生丑陋文本框
+            const djangoTextarea = document.querySelector('.vditor-textarea');
+            if (djangoTextarea) {
+                // 2. 隐藏它（但它依然存在于表单中，用于最终提交数据）
+                djangoTextarea.style.display = 'none';
+
+                // 3. 在原生文本框的前面，动态创建一个高大上的 div 容器供 Vditor 附体
+                const vditorContainer = document.createElement('div');
+                vditorContainer.id = 'vditor-editor';
+                djangoTextarea.parentNode.insertBefore(vditorContainer, djangoTextarea);
+
+                // 4. 召唤 Vditor 引擎
+                const vditor = new Vditor('vditor-editor', {
+                    height: 350,                  // 编辑器总高度
+                    mode: 'sv',                   // 模式：sv(分屏预览), wysiwyg(所见即所得), ir(即时渲染)
+                    theme: 'classic',             // 主题：classic 或 dark
+                    placeholder: '支持 Markdown 语法，可直接拖拽或粘贴图片...',
+                    cache: {
+                        enable: false             // 禁用本地缓存，防止新建和编辑时数据错乱
+                    },
+                    // 如果原本 Django 的 textarea 里有值（比如在编辑问题时），就在这里初始化进去
+                    value: djangoTextarea.value,
+
+                    // 💥 灵魂机制：用户在 Vditor 中输入的任何内容，都会实时静默同步给 Django 的隐藏文本框
+                    input: function (text) {
+                        djangoTextarea.value = text;
+                    },
+
+                    upload: {
+                        accept: 'image/*, .wav',
+                        url: '{% url 'web:wiki_upload' proj_id=request.tracer.project.id %}', // 你的 Django 处理图片的路由
+                        fieldName: 'editormd-image-file',      // 对应 request.FILES.get('image_file')
+                        format(files, responseText) {
+                            // 处理后端返回的 JSON 数据
+                            let res = JSON.parse(responseText);
+                            let result = {
+                                msg: res.message || "上传失败",
+                                // 后端 success 为 1 代表成功；而 Vditor 要求 code 为 0 代表成功
+                                code: res.success === 1 ? 0 : 1,
+                                data: {
+                                    errFiles: [],
+                                    succMap: {}
+                                }
+                            };
+                            if (res.success === 1) {
+                                // 如果成功，把后端返回的真实 url 喂给 Vditor
+                                result.data.succMap[files[0].name] = res.url;
+                            } else {
+                                // 如果失败，记录失败的文件名
+                                result.data.errFiles.push(files[0].name);
+                            }
+                            return JSON.stringify(result);
+                        }
+                    }
+                });
+            }
+        });
+
+
+        newIssuesModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget
+            const act = button.getAttribute('data-act')
+
+            document.querySelectorAll('.err-mag').forEach(Box => Box.innerText = '');
+            if (act === 'add') {
+                modelTile.innerText = '新建问题';
+            } else {
+                modelTile.innerText = '邀请成员';
+            }
+        })
+    </script>
+{% endblock %}

@@ -13,6 +13,9 @@ class User(models.Model):
     phone = models.CharField(verbose_name='手机号', max_length=32, unique=True)
     # inviter = models.ForeignKey('User', verbose_name='邀请者', on_delete=models.SET_NULL, null=True, blank=True)
 
+    def __str__(self):
+        return self.name
+
 
 # 产品表
 class Product(models.Model):

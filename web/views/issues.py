@@ -1,0 +1,6 @@
+from django.shortcuts import render
+from web.forms.issues import IssuesModelForm
+
+def issues(request,proj_id):
+    form = IssuesModelForm
+    return render(request,'issues.html',{'form':form})

@@ -2,7 +2,7 @@ app_name = 'web'
 
 from django.contrib import admin
 from django.urls import path
-from web.views import account, project, home, manage, wiki, file, settings
+from web.views import account, project, home, manage, wiki, file, settings, issues
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
@@ -24,7 +24,10 @@ urlpatterns = [
     # 进入项目
     path('manage/<int:proj_id>/', ([
                                        path('dashboard/', manage.dashboard, name='dashboard'),
-                                       path('issues/', manage.issues, name='issues'),
+
+                                       # issues
+                                       path('issues/', issues.issues, name='issues'),
+
                                        path('statistics/', manage.statistics, name='statistics'),
 
                                        # file
