@@ -1,1 +1,46 @@
 {% extends 'layout/manage.html' %}
+{% load static %}
+
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="row">
+
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm border-0" style="border-radius: 4px;">
+                    <div class="card-header bg-white fw-bold py-3" style="border-bottom: 1px solid #f0f0f0;">
+                        个人中心
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action py-3 text-secondary">
+                            我的资料
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action py-3 text-secondary">
+                            修改密码
+                        </a>
+                        <a href="{% url 'web:settings_del' proj_id=request.tracer.project.id %}" class="list-group-item list-group-item-action py-3 text-secondary">
+                            删除项目
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="card shadow-sm border-0" style="border-radius: 4px;">
+                    <div class="card-header bg-light py-2 text-muted" style="font-size: 14px;">
+                        <i class="fa-regular fa-address-card me-1"></i> 信息设置
+                    </div>
+
+                    <div class="card-body p-5" style="min-height: 400px;">
+                        <h4 style="text-align: center; color:red;">此页面与您账号信息密切关联，请谨慎操作！</h4>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+{% endblock %}
+
+
+{% block js %}
+
+{% endblock %}

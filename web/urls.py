@@ -2,7 +2,7 @@ app_name = 'web'
 
 from django.contrib import admin
 from django.urls import path
-from web.views import account, project, home, manage, wiki, file
+from web.views import account, project, home, manage, wiki, file, settings
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
@@ -27,23 +27,12 @@ urlpatterns = [
                                        path('issues/', manage.issues, name='issues'),
                                        path('statistics/', manage.statistics, name='statistics'),
 
-
-
-
                                        # file
                                        path('file/', file.file, name='file'),
                                        path('file/del/', file.file_del, name='file_del'),
                                        path('upload/credential/', file.upload_credential, name='upload_credential'),
                                        path('file/add/', file.file_add, name='file_add'),
                                        path('file/download/<int:file_id>', file.file_download, name='file_download'),
-
-
-
-
-
-
-
-
 
                                        # wiki
                                        path('wiki/', wiki.wiki, name='wiki'),
@@ -52,7 +41,9 @@ urlpatterns = [
                                        path('wiki/edit/', wiki.wiki_edit, name='wiki_edit'),
                                        path('wiki/upload/', wiki.wiki_upload, name='wiki_upload'),
 
-                                       path('settings/', manage.settings, name='settings'),
+                                       # setting
+                                       path('settings/', settings.settings, name='settings'),
+                                       path('settings/del/', settings.settings_del, name='settings_del'),
 
                                    ], None, None)),
 

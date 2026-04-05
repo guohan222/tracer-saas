@@ -19,6 +19,3 @@ def statistics(request,proj_id):
 
 
 
-
-def settings(request,proj_id):
-    return render(request,'settings.html')

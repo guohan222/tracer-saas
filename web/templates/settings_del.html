@@ -1,0 +1,114 @@
+{% extends 'layout/manage.html' %}
+{% load static %}
+
+
+{% block content %}
+    <div class="container mt-4">
+    <div class="row">
+
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0" style="border-radius: 4px;">
+                <div class="card-header bg-white fw-bold py-3" style="border-bottom: 1px solid #f0f0f0;">
+                    个人中心
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action py-3 text-secondary">
+                        我的资料
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action py-3 text-secondary">
+                        修改密码
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action py-3 text-dark fw-bold"
+                       style="background-color: #f8f9fa; border-left: 3px solid #fd7e14;">
+                        删除项目
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card shadow-sm border-0" style="border-radius: 4px;">
+                <div class="card-header bg-light py-2 text-muted" style="font-size: 14px;">
+                    <i class="fa-regular fa-address-card me-1"></i> 删除项目
+                </div>
+
+                <div class="card-body p-5" style="min-height: 400px;">
+                    <form id="deleteProjectForm" method="POST" action="">
+                        {% csrf_token %}
+                        <div class="row mb-4 align-items-center">
+                            <label for="inputProjectName" class="col-sm-2 col-form-label text-end fw-bold">
+                                项目名
+                            </label>
+                            <div class="col-sm-7">
+                                <input type="text" class="form-control" id="inputProjectName" name="project_name"
+                                       placeholder="请输入当前项目名称">
+                                <span class='err-msg'></span>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-sm-7 offset-sm-2">
+                                <button type="button" class="btn btn-danger px-4" id="btnDeleteProject">
+                                    删 除
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="successToast"
+         style="position: fixed; top: 30px; left: 50%; transform: translateX(-50%); background-color: #fff; border-left: 4px solid #52c41a; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 12px 24px; border-radius: 4px; display: none; z-index: 9999; font-size: 14px; color: #333; align-items: center;">
+        <i class="fa-solid fa-circle-check" style="margin-right: 8px; color: #52c41a;"></i>
+        <span id="toastMsg">删除成功</span>
+    </div>
+{% endblock %}
+
+
+{% block js %}
+    <script>
+        const btnDeleteProject = document.getElementById('btnDeleteProject')
+        const originText = btnDeleteProject.innerText
+        const inputName = document.getElementById('inputProjectName')
+        const formElement = document.getElementById('deleteProjectForm')
+
+
+        function showSuccessToast() {
+            const toast = document.getElementById('successToast');
+
+            toast.style.display = 'flex'; // 让它显现出来
+
+            // 设定一个定时器
+            setTimeout(() => {
+                toast.style.display = 'none';
+                location.assign('{% url 'web:project_list' %}')
+            }, 1500);
+        }
+
+        btnDeleteProject.addEventListener('click', async function () {
+            inputName.nextElementSibling.innerText = ''
+            btnDeleteProject.innerText = "检测中...";
+            btnDeleteProject.disabled = true;
+
+            let form_data = new FormData(formElement);
+            let res = await fetch('{% url 'web:settings_del' proj_id=request.tracer.project.id %}', {
+                method: 'POST',
+                body: form_data
+            })
+            let data = await res.json()
+            console.log(data)
+            if (data.status) {
+                showSuccessToast()
+            } else {
+                inputName.nextElementSibling.innerText = data.error
+            }
+            btnDeleteProject.innerText = originText;
+            btnDeleteProject.disabled = false;
+
+        })
+    </script>
+{% endblock %}
