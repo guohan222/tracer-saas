@@ -1,4 +1,5 @@
 import json
+import requests
 
 from web import models
 from web.forms.file import FolderModelForm, FileModelForm
@@ -6,7 +7,7 @@ from utils.tencent import cos
 
 from django.forms import model_to_dict
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db.models import F
 from django.views.decorators.csrf import csrf_exempt
 
@@ -180,5 +181,27 @@ def file_add(request, proj_id):
         return JsonResponse({'status':True})
     print(form.errors)
     return JsonResponse({'status':False,'error':form.errors.get_json_data()})
+
+
+
+# 下载文件
+def file_download(request,proj_id,file_id):
+    file_obj = models.FileRepository.objects.filter(project_id=proj_id,id=file_id).first()
+    res = requests.get(file_obj.file_path)
+    """
+    获取文件内容
+    data = res.content
+    """
+    # 分块获取文件内容（大文件）
+    data = res.iter_content()
+    # 反回文件内容&设置响应头告知浏览器下载这个内容
+    response = HttpResponse(data,content_type='application/octet-stream')
+    # 对中文文件名进行转义
+    from django.utils.encoding import escape_uri_path
+    response['Content-Disposition'] = f"attachment;filename={escape_uri_path(file_obj.name)};"
+    return response
+
+
+
 
 
