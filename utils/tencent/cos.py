@@ -246,7 +246,7 @@ def delete_bucket(bucket, region):
                 }
             )
 
-            # 判断part_objs是不是被阶段的，因为part_objs是获取部分，如果是被截断的就代表后面还有，如果不是则代表桶里面没有文件了
+            # 判断part_objs是不是被截断的，因为part_objs是获取部分，如果是被截断的就代表后面还有，如果不是则代表桶里面没有文件了
             if part_objs['IsTruncated'] == 'false':
                 break
 

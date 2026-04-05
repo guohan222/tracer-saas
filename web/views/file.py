@@ -81,8 +81,8 @@ def file_del(request, proj_id):
     # 用户删除单个文件
     if del_obj.file_type == 1:
         # 删除文件归还用户在该项目使用的空间
-        request.tracer.project.used_storage -= del_obj.file_size
-        request.tracer.project.save()
+        request.tracer.project.used_storage = F('used_storage') - del_obj.file_size
+        request.tracer.project.save(update_fields=['used_storage'])
 
         # cos中删除文件
         cos.del_file(request.tracer.project.bucket, request.tracer.project.region, del_obj.key)

@@ -110,10 +110,11 @@ class Wiki(models.Model):
 
 # 文件管理表
 class FileRepository(models.Model):
-    file_type_choices = {
+    file_type_choices = (
         (1, '文件'),
         (2, '文件夹'),
-    }
+    )
+
     project = models.ForeignKey(verbose_name='项目', to='Project', on_delete=models.CASCADE)
     file_type = models.SmallIntegerField(verbose_name='类型', choices=file_type_choices)
     name = models.CharField(verbose_name='文件夹名称', max_length=32, help_text='文件/文件夹名称')
@@ -125,3 +126,75 @@ class FileRepository(models.Model):
 
     update_user = models.ForeignKey(verbose_name='最近更新者', to='User', on_delete=models.CASCADE)
     update_datetime = models.DateTimeField(verbose_name='更新时间', auto_now=True)
+
+
+# 问题总表
+class Issues(models.Model):
+    project = models.ForeignKey(verbose_name='所属项目', to='Project', on_delete=models.CASCADE)
+    issues_type = models.ForeignKey(verbose_name='问题类型', to='IssuesType', on_delete=models.CASCADE)
+    module = models.ForeignKey(verbose_name='所属工期', to='Module', on_delete=models.CASCADE, null=True, blank=True)
+
+    subject = models.CharField(verbose_name='主题', max_length=80)
+    desc = models.TextField(verbose_name='问题描述')
+    priority_choices = (
+        ('danger', '高'),
+        ('warning', '中'),
+        ('success', '低'),
+    )
+    priority = models.CharField(verbose_name='优先级', max_length=32, choices=priority_choices, default='danger')
+
+    # 问题状态
+    status_choices = (
+        (1, '新建'),
+        (2, '处理中'),
+        (3, '已解决'),
+        (4, '已忽略'),
+        (5, '待反馈'),
+        (6, '已关闭'),
+        (7, '重新开工'),
+    )
+    status = models.SmallIntegerField(verbose_name='状态', choices=status_choices, default=1)
+    assign = models.ForeignKey(verbose_name='指派', to='User', related_name='task', on_delete=models.CASCADE, null=True,
+                               blank=True)
+    attention = models.ManyToManyField(verbose_name='关注者', to='User', related_name='observer', blank=True)
+
+    start_date = models.DateTimeField(verbose_name='开始时间', null=True, blank=True)
+    end_date = models.DateTimeField(verbose_name='结束时间', null=True, blank=True)
+    mode_choices = (
+        (1, '公开模式'),
+        (2, '隐私模式')
+    )
+    mode = models.SmallIntegerField(verbose_name='模式', choices=mode_choices, default=1)
+
+    parent = models.ForeignKey(verbose_name='父问题', to='self', related_name='children', null=True, blank=True,
+                               on_delete=models.SET_NULL)
+
+    creator = models.ForeignKey(verbose_name='创建者', to='User', related_name='create_problems',
+                                on_delete=models.CASCADE)
+    create_datetime = models.DateTimeField(verbose_name='创建时间',auto_now_add=True)
+    latest_update_datetime = models.DateTimeField(verbose_name='最后更新时间', auto_now=True)
+
+    def __str__(self):
+        return self.subject
+
+
+
+
+# 问题里程杯表
+class Module(models.Model):
+    """解释：某个问题属于某个阶段工期里面的"""
+    title = models.CharField(verbose_name='工期名称', max_length=32)
+    project = models.ForeignKey(verbose_name='所属项目', to='Project', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.title
+
+
+# 问题类型表
+class IssuesType(models.Model):
+    """如：任务、功能、bug"""
+    title = models.CharField(verbose_name='类型名称', max_length=32)
+    project = models.ForeignKey(verbose_name='所属项目', to='Project', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.title

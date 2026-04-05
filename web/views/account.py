@@ -7,7 +7,6 @@ from web import models
 from django.db.models import Q
 from django.urls import reverse
 from django.shortcuts import render, redirect
-from django.core.exceptions import ValidationError
 from django.http import JsonResponse, HttpResponse
 from web.forms.account import RegisterModelForm, SendSmsForm, LoginSmsForm, LoginForm
 
