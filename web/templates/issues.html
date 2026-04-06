@@ -1,5 +1,6 @@
 {% extends 'layout/manage.html' %}
 {% load static %}
+{% load issues %}
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'plugin/flatpickr/flatpickr.min.css' %}">
@@ -51,55 +52,56 @@
                         </div>
 
                         <div class="list-group">
+                            <div class="list-group shadow-sm">
+                                {% for item in issues_object_list %}
+                                    <div class="list-group-item py-3">
 
-                            <div class="list-group-item py-3">
-                                <div class="d-flex align-items-center mb-2">
-                                <span class="me-2 text-danger" style="font-size: 12px;">
-                                    <i class="fa-solid fa-circle"></i>
-                                </span>
-                                    <span class="fw-bold text-primary me-3" style="font-size: 15px;">
-                                    #010
-                                </span>
-                                    <a href="#" class="text-decoration-none text-dark fw-bold" style="font-size: 15px;">
-                                        测试问题 (原：去死)
-                                    </a>
-                                </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="me-2 text-danger" style="font-size: 12px;">
+                                                <i class="fa-solid fa-circle"></i>
+                                            </span>
+                                            <span class="fw-bold text-primary me-3" style="font-size: 15px;">
+                                                {% string_just item.id %}
+                                            </span>
+                                            <a href="#" class="text-decoration-none text-dark fw-bold" style="font-size: 15px;">
+                                                {{ item.subject }}
+                                            </a>
+                                        </div>
 
-                                <div class="d-flex align-items-center text-muted"
-                                     style="font-size: 13px; margin-left: 24px;">
-                                    <span class="badge bg-primary text-white me-3 px-2 py-1">功能</span>
+                                        <div class="d-flex align-items-center text-muted" style="font-size: 13px; margin-left: 24px;">
+                                            <span class="badge bg-primary text-white me-3 px-2 py-1">
+                                                {{ item.issues_type }}
+                                            </span>
 
-                                    <span class="me-3">
-                                    <i class="fa-solid fa-arrows-rotate me-1"></i> 已解决
-                                </span>
+                                            <span class="me-3">
+                                                <i class="fa-solid fa-arrows-rotate me-1"></i> {{ item.get_status_display }}
+                                            </span>
 
-                                    <span class="me-3">
-                                    <i class="fa-regular fa-user me-1"></i> wupeiqi
-                                </span>
+                                            <span class="me-3">
+                                                <i class="fa-regular fa-user me-1"></i> {{ item.creator }}
+                                            </span>
 
-                                    <span>
-                                    <i class="fa-regular fa-clock me-1"></i> 2020年3月30日 11:26 更新
-                                </span>
-                                </div>
+                                            <span class="me-3">
+                                                <i class="fa-regular fa-hand-point-right me-1"></i> {{ item.assign }}
+                                            </span>
+
+                                            <span class="me-3">
+                                                <i class="fa-regular fa-clock me-1"></i> {{ item.latest_update_datetime|date:"Y-m-d H:i" }} 更新
+                                            </span>
+
+                                            <span class="me-3">
+                                                <i class="fa-solid fa-alarm-clock me-1"></i> {{ item.end_date|date:"Y-m-d" }} 截止
+                                            </span>
+                                        </div>
+
+                                    </div>
+                                {% endfor %}
                             </div>
-
                         </div>
 
                         <nav aria-label="Page navigation" class="mt-4">
                             <ul class="pagination pagination-sm m-0">
-                                <li class="page-item disabled">
-                                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">«</a>
-                                </li>
-                                <li class="page-item active" aria-current="page">
-                                    <a class="page-link" href="#">1</a>
-                                </li>
-                                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                <li class="page-item"><a class="page-link" href="#">4</a></li>
-                                <li class="page-item"><a class="page-link" href="#">5</a></li>
-                                <li class="page-item">
-                                    <a class="page-link" href="#">»</a>
-                                </li>
+                                {{ page_html|safe }}
                             </ul>
                         </nav>
 
@@ -264,7 +266,7 @@
                 djangoTextarea.parentNode.insertBefore(vditorContainer, djangoTextarea);
 
                 // 4. 召唤 Vditor 引擎
-                 myVditor = new Vditor('vditor-editor', {
+                myVditor = new Vditor('vditor-editor', {
                     height: 350,                  // 编辑器总高度
                     mode: 'sv',                   // 模式：sv(分屏预览), wysiwyg(所见即所得), ir(即时渲染)
                     theme: 'classic',             // 主题：classic 或 dark
