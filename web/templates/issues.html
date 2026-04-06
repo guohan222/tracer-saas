@@ -61,9 +61,9 @@
                                                 <i class="fa-solid fa-circle"></i>
                                             </span>
                                             <span class="fw-bold text-primary me-3" style="font-size: 15px;">
-                                                {% string_just item.id %}
+                                                <a href="{% url 'web:issues_detail' proj_id=item.project.id issues_id=item.id %}" class="text-decoration-none fw-bold">{% string_just item.id %}</a>
                                             </span>
-                                            <a href="#" class="text-decoration-none text-dark fw-bold" style="font-size: 15px;">
+                                            <a href="{% url 'web:issues_detail' proj_id=item.project.id issues_id=item.id %}" class="text-decoration-none text-dark fw-bold" style="font-size: 15px;">
                                                 {{ item.subject }}
                                             </a>
                                         </div>
@@ -98,7 +98,7 @@
                                 {% endfor %}
                             </div>
                         </div>
-
+                        <!--分页条-->
                         <nav aria-label="Page navigation" class="mt-4">
                             <ul class="pagination pagination-sm m-0">
                                 {{ page_html|safe }}

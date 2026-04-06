@@ -11,6 +11,7 @@ class User(models.Model):
     email = models.EmailField(verbose_name='邮箱', max_length=32)
     pwd = models.CharField(verbose_name='密码', max_length=128)
     phone = models.CharField(verbose_name='手机号', max_length=32, unique=True)
+
     # inviter = models.ForeignKey('User', verbose_name='邀请者', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
@@ -174,13 +175,11 @@ class Issues(models.Model):
 
     creator = models.ForeignKey(verbose_name='创建者', to='User', related_name='create_problems',
                                 on_delete=models.CASCADE)
-    create_datetime = models.DateTimeField(verbose_name='创建时间',auto_now_add=True)
+    create_datetime = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
     latest_update_datetime = models.DateTimeField(verbose_name='最后更新时间', auto_now=True)
 
     def __str__(self):
         return self.subject
-
-
 
 
 # 问题里程杯表
@@ -196,10 +195,26 @@ class Module(models.Model):
 # 问题类型表
 class IssuesType(models.Model):
     """如：任务、功能、bug"""
-    PROJECT_INIT_LIST = ['任务','功能','Bug']
+    PROJECT_INIT_LIST = ['任务', '功能', 'Bug']
 
     title = models.CharField(verbose_name='类型名称', max_length=32)
     project = models.ForeignKey(verbose_name='所属项目', to='Project', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title
+
+
+# 操作记录表（评论）
+class IssuesReply(models.Model):
+    reply_type_choices = (
+        (1, '修改记录'),
+        (2, '回复'),
+    )
+    reply_type = models.SmallIntegerField(verbose_name='类型',choices=reply_type_choices)
+    issues = models.ForeignKey(verbose_name='所属问题',to=Issues,on_delete=models.CASCADE)
+    creator = models.ForeignKey(verbose_name='创建者',to=User,on_delete=models.CASCADE,related_name='creator_reply')
+    content = models.TextField(verbose_name='描述')
+    create_datetime = models.DateTimeField(verbose_name='创建时间',auto_now=True)
+
+    parent = models.ForeignKey(verbose_name='父评论',to='self',on_delete=models.CASCADE,related_name='children',null=True,blank=True)
+

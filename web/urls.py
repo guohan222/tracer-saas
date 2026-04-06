@@ -27,6 +27,7 @@ urlpatterns = [
 
                                        # issues
                                        path('issues/', issues.issues, name='issues'),
+                                       path('issues/detail/<int:issues_id>/', issues.issues_detail, name='issues_detail'),
 
                                        path('statistics/', manage.statistics, name='statistics'),
 
