@@ -122,7 +122,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="" method="post" id="file_form">
+                    <form action="" method="post" id="issues_form">
                         {% csrf_token %}
                         <div class="row">
 
@@ -215,9 +215,14 @@
 
     <script>
         const newIssuesModal = document.getElementById('newIssuesModal')
-        const modelTile = document.getElementById('newIssuesModalLabel')
+        const modalTile = document.getElementById('newIssuesModalLabel')
         const confirm_button = document.getElementById('confirm_button')
+        const formElement = document.getElementById('issues_form')
+        const confirmUrl = '{% url 'web:issues' proj_id=request.tracer.project.id %}';
+        let myVditor;
 
+
+        // 页面加载完后加载插件
         document.addEventListener('DOMContentLoaded', function () {
             // 场景 A：纯日期选择 (年-月-日)
             flatpickr(".date-picker", {
@@ -247,7 +252,7 @@
                 });
             });
 
-            // 1. 找到 Django 渲染出来的原生丑陋文本框
+            // 找到 Django 渲染出来的原生文本框,加载为vditor插件
             const djangoTextarea = document.querySelector('.vditor-textarea');
             if (djangoTextarea) {
                 // 2. 隐藏它（但它依然存在于表单中，用于最终提交数据）
@@ -259,7 +264,7 @@
                 djangoTextarea.parentNode.insertBefore(vditorContainer, djangoTextarea);
 
                 // 4. 召唤 Vditor 引擎
-                const vditor = new Vditor('vditor-editor', {
+                 myVditor = new Vditor('vditor-editor', {
                     height: 350,                  // 编辑器总高度
                     mode: 'sv',                   // 模式：sv(分屏预览), wysiwyg(所见即所得), ir(即时渲染)
                     theme: 'classic',             // 主题：classic 或 dark
@@ -306,16 +311,55 @@
         });
 
 
+        // 监听模态框
         newIssuesModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget
             const act = button.getAttribute('data-act')
 
-            document.querySelectorAll('.err-mag').forEach(Box => Box.innerText = '');
+
+            document.querySelectorAll('.err-msg').forEach(Box => Box.innerText = '');
             if (act === 'add') {
-                modelTile.innerText = '新建问题';
+                modalTile.innerText = '新建问题';
+                formElement.reset()
+
+                // 3. 清空 Vditor编辑器的内容
+                if (typeof myVditor !== 'undefined') {
+                    myVditor.setValue('');
+                }
+
+                // 4. 清空 Tom Select 的选项
+                document.querySelectorAll('.tom-select-single, .tom-select-multiple').forEach(el => {
+                    if (el.tomselect) {
+                        el.tomselect.clear();
+                    }
+                });
+
             } else {
-                modelTile.innerText = '邀请成员';
+                modalTile.innerText = '邀请成员';
             }
+        });
+
+
+        // 监听确定按钮
+        confirm_button.addEventListener('click', async function () {
+            document.querySelectorAll('.err-msg').forEach(Box => Box.innerText = '');
+            let formData = new FormData(formElement)
+            let res = await fetch(confirmUrl, {
+                method: 'POST',
+                body: formData
+            })
+            let data = await res.json()
+            console.log(data)
+            if (data.status) {
+                location.href = location.href
+            } else {
+                let errors = data.errors
+                for (let field in errors) {
+                    let errorElement = document.getElementById(`id_${field}`).nextElementSibling
+                    errorElement.innerText = errors[field][0].message
+                }
+            }
+
         })
     </script>
 {% endblock %}

@@ -230,7 +230,7 @@ def delete_bucket(bucket, region):
                     },
                 ]
             """
-            print(f'删除桶中文件时part_objs={part_objs}')
+            print(f'删除项目：删除桶中文件时part_objs={part_objs}')
 
             # 判断是否已删除完毕
             contents = part_objs.get('Contents')

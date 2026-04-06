@@ -44,7 +44,21 @@ def project_list(request):
         form.instance.bucket = bucket
         form.instance.region = region
         form.instance.creator = request.tracer.user
-        form.save()
+        instance = form.save()
+
+        # 为项目初始化几个问题类型
+        """
+        models.IssuesType.object.create(project_id=proj_id,title='xxx')
+        等价于
+        obj = models.IssuesType(project_id=proj_id,title='xxx')     # 实例化IssuesType对象
+        obj.save()                                                  # 将这个对象写入数据库对应的表中
+            
+        """
+        issues_obj_list = []
+        for item in models.IssuesType.PROJECT_INIT_LIST:
+            issues_obj_list.append(models.IssuesType(title=item,project_id=instance.id))
+        models.IssuesType.objects.bulk_create(issues_obj_list)
+
         return JsonResponse({'status':True})
 
     return JsonResponse({'status':False, 'form':form.errors})

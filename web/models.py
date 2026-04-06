@@ -196,6 +196,8 @@ class Module(models.Model):
 # 问题类型表
 class IssuesType(models.Model):
     """如：任务、功能、bug"""
+    PROJECT_INIT_LIST = ['任务','功能','Bug']
+
     title = models.CharField(verbose_name='类型名称', max_length=32)
     project = models.ForeignKey(verbose_name='所属项目', to='Project', on_delete=models.CASCADE)
 
