@@ -108,7 +108,8 @@
 
 
                                     <div class="d-grid mt-4">
-                                        <button type="button" class="btn btn-dark btn-lg" id="confirm_button">确 定</button>
+                                        <button type="button" class="btn btn-dark btn-lg" id="confirm_button">确 定
+                                        </button>
                                         <button type="button" class="btn btn-light btn-lg" id="#">
                                             <a href="{% url 'web:issues' proj_id=request.tracer.project.id %}"
                                                class="text-decoration-none text-primary">取 消</a>
@@ -136,29 +137,7 @@
 
                         <div class="text-muted text-center py-5">
                             <div class="action-history-list mb-4">
-
-                                <div class="d-flex mb-4">
-                                    <div class="flex-shrink-0 bg-dark text-white rounded-circle d-flex align-items-center justify-content-center fw-bold"
-                                         style="width: 45px; height: 45px; font-size: 18px;">
-                                        王
-                                    </div>
-
-                                    <div class="ms-3 flex-grow-1">
-                                        <div class="bg-light border rounded px-3 py-2 mb-2 text-dark">
-                                            阿斯顿发的
-                                        </div>
-
-                                        <div class="text-muted d-flex align-items-center" style="font-size: 13px;">
-                                            <span><i class="fa-solid fa-bullhorn me-1"></i>回复</span>
-                                            <span class="ms-4"><i class="fa-regular fa-user me-1"></i>王洋</span>
-                                            <span class="ms-4"><i class="fa-regular fa-clock me-1"></i>2000-11-11</span>
-                                            <a href="javascript:void(0);"
-                                               class="ms-4 text-primary text-decoration-none">
-                                                <i class="fa-regular fa-comment-dots me-1"></i>回复
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
+                                <!--评论-->
 
                             </div>
 
@@ -191,11 +170,14 @@
         const confirm_button = document.getElementById('confirm_button')
         const formElement = document.getElementById('issues_form')
         const confirmUrl = '{% url 'web:issues_detail' proj_id=request.tracer.project.id issues_id=issues_obj.id %}';
+        const replyUrl = '{% url 'web:issues_record' proj_id=request.tracer.project.id issues_id=issues_obj.id %}'
         let myVditor;
 
 
-        // 页面加载完后加载插件
+        // 页面加载初始化
         document.addEventListener('DOMContentLoaded', function () {
+            initIssuesRecord()
+
             // 场景 A：纯日期选择 (年-月-日)
             flatpickr(".date-picker", {
                 locale: "zh",          // 使用中文语言包
@@ -303,5 +285,55 @@
             }
 
         })
+
+
+        // 获取该问题中的所有操作记录
+        async function initIssuesRecord() {
+            let res = await fetch(replyUrl)
+            let data = await res.json()
+            if (data.status) {
+                data.reply_obj_list.forEach(obj => createRecordNode(obj))
+            }
+        }
+
+        // 评论的挂载
+        function createRecordNode(nodeDict){
+            // 评论模板
+            const recordTemplate = `
+            <div class="d-flex mb-4" id="record-${nodeDict.id}">
+                <div class="flex-shrink-0 bg-dark text-white rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                     style="width: 45px; height: 45px; font-size: 18px;">
+                    <!--取名字第一个字符,并且转为大写-->
+                    ${nodeDict.creator_name[0].toUpperCase()}
+                </div>
+
+                <div class="ms-3 flex-grow-1">
+                    <div class="bg-light border rounded px-3 py-2 mb-2 text-dark">
+                        ${nodeDict.content}
+                    </div>
+
+                    <div class="text-muted d-flex align-items-center" style="font-size: 13px;">
+                        <span><i class="fa-solid fa-bullhorn me-1"></i>${nodeDict.reply_type}</span>
+                        <span class="ms-4"><i class="fa-regular fa-user me-1"></i>${nodeDict.creator_name}</span>
+                        <span class="ms-4"><i class="fa-regular fa-clock me-1"></i>${nodeDict.create_datetime}</span>
+                        <a href="javascript:void(0);"
+                           class="ms-4 text-primary text-decoration-none">
+                            <i class="fa-regular fa-comment-dots me-1"></i>回复
+                        </a>
+                    </div>
+                    <!--挂载孩子-->
+                    <div class="child-list mt-3"></div>
+                </div>
+            </div>
+            `
+            // 实现挂载
+            if (nodeDict.parent_id){
+                const parentBox = document.querySelector(`#record-${nodeDict.parent_id} .child-list`)
+                if(parentBox) parentBox.insertAdjacentHTML('beforeend',recordTemplate);
+
+            }else{
+                document.querySelector(`.action-history-list`).insertAdjacentHTML('beforeend',recordTemplate)
+            }
+        }
     </script>
 {% endblock %}

@@ -55,3 +55,24 @@ def issues_detail(request,proj_id,issues_id):
         form.save()
         return JsonResponse({'status': True})
     return JsonResponse({'status': False, 'errors': form.errors.get_json_data()})
+
+
+
+
+# 展示&新建评论
+def issues_record(request,proj_id,issues_id):
+    # 按时间正序排,防止子评论早出现找不到父评论
+    reply_objs = models.IssuesReply.objects.filter(issues_id=issues_id).order_by('create_datetime')
+    reply_obj_list = []
+    for row in reply_objs:
+        data = {
+            'id':row.id,
+            'reply_type':row.reply_type,
+            'creator_name':row.creator.name,
+            'content':row.content,
+            'create_datetime':row.create_datetime,
+            'parent_id':row.parent.id if row.parent else ''
+        }
+        reply_obj_list.append(data)
+
+    return JsonResponse({'status':True,'reply_obj_list':reply_obj_list})
