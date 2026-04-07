@@ -41,13 +41,19 @@ def issues(request, proj_id):
 
 
 # 编辑问题
+@csrf_exempt
 def issues_detail(request,proj_id,issues_id):
     issues_obj = models.Issues.objects.filter(id=issues_id).first()
 
+    # 展示原有数据
     if request.method == "GET":
         form = IssuesModelForm(request,instance=issues_obj)
         return render(request,'issues_detail.html',{'form':form,'issues_obj':issues_obj})
 
+
+
+
+    """
     form = IssuesModelForm(request, data=request.POST,instance=issues_obj)
     if form.is_valid():
         # exclude = ['project', 'creator', 'create_datetime', 'latest_update_datetime']
@@ -56,6 +62,7 @@ def issues_detail(request,proj_id,issues_id):
         form.save()
         return JsonResponse({'status': True})
     return JsonResponse({'status': False, 'errors': form.errors.get_json_data()})
+    """
 
 
 

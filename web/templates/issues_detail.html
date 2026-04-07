@@ -108,9 +108,11 @@
 
 
                                     <div class="d-grid mt-4">
-                                        <button type="button" class="btn btn-dark btn-lg" id="confirm_button">确 定</button>
+{#                                        <button type="button" class="btn btn-dark btn-lg" id="confirm_button">确 定#}
+{#                                        </button>#}
 
-                                        <button type="button" class="btn btn-light btn-lg" id="cancel_edit">取 消</button>
+                                        <button type="button" class="btn btn-dark btn-lg" id="cancel_edit">返 回
+                                        </button>
                                     </div>
 
                                 </div>
@@ -144,8 +146,12 @@
                                 <textarea id="reply_content" class="form-control mb-3" rows="4"
                                           placeholder="请输入要回复的内容"></textarea>
                                 <div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-dark btn-lg flex-grow-1" id="reply_submit">发 送</button>
-                                    <button type="button" class="btn btn-light btn-lg d-none" id="reply_cancel">取消回复</button>
+                                    <button type="button" class="btn btn-dark btn-lg flex-grow-1" id="reply_submit">发
+                                        送
+                                    </button>
+                                    <button type="button" class="btn btn-light btn-lg d-none" id="reply_cancel">
+                                        取消回复
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -167,15 +173,16 @@
 
 
     <script>
-        const confirm_button = document.getElementById('confirm_button')
+        const issues_form = document.querySelector('#issues_form')
+        // const confirm_button = document.getElementById('confirm_button')
         const cancel_edit = document.querySelector('#cancel_edit')
         const reply_submit = document.querySelector('#reply_submit')
         const reply_cancel = document.querySelector('#reply_cancel')
         const reply_content = document.querySelector("#reply_content")
         let current_reply_parent_id = ''
 
-        const formElement = document.getElementById('issues_form')
-        const confirmUrl = '{% url 'web:issues_detail' proj_id=request.tracer.project.id issues_id=issues_obj.id %}';
+        // const formElement = document.getElementById('issues_form')
+        const editUrl = '{% url 'web:issues_detail' proj_id=request.tracer.project.id issues_id=issues_obj.id %}';
         const replyUrl = '{% url 'web:issues_record' proj_id=request.tracer.project.id issues_id=issues_obj.id %}'
 
         let myVditor;
@@ -271,18 +278,31 @@
             }
         });
 
-        // 监听问题编辑,确定按钮
-        confirm_button.addEventListener('click', async function () {
+
+        // 给表单绑定change事件
+        issues_form.addEventListener('change', function (event) {
+            // 找到发生改变的东西
+            const changeElement = event.target
+            const changeDict = {'field': changeElement.name, 'value': changeElement.value}
+            console.log(changeDict)
+            editFetch(changeDict)
+        })
+
+        //
+        async function editFetch(content) {
             document.querySelectorAll('.err-msg').forEach(Box => Box.innerText = '');
-            let formData = new FormData(formElement)
-            let res = await fetch(confirmUrl, {
+            let formData = new FormData(issues_form)
+            formData.append('field',content.field)
+            formData.append('value',content.value)
+
+            let res = await fetch(editUrl, {
                 method: 'POST',
                 body: formData
             })
             let data = await res.json()
             console.log(data)
             if (data.status) {
-                location.assign('{% url 'web:issues' proj_id=request.tracer.project.id %}')
+                // location.assign('{% url 'web:issues' proj_id=request.tracer.project.id %}')
             } else {
                 let errors = data.errors
                 for (let field in errors) {
@@ -290,11 +310,11 @@
                     errorElement.innerText = errors[field][0].message
                 }
             }
+        }
 
-        })
 
         // 监听问题编辑,取消按钮
-        cancel_edit.addEventListener('click',function (){
+        cancel_edit.addEventListener('click', function () {
             location.assign('{% url 'web:issues' proj_id=request.tracer.project.id %}')
         })
 
@@ -365,12 +385,12 @@
         })
 
         // 监听取消回复按钮
-        reply_cancel.addEventListener('click',function (){
+        reply_cancel.addEventListener('click', function () {
             resetReplyStatus()
         })
 
         // 取消回复重置内容
-        function resetReplyStatus(){
+        function resetReplyStatus() {
             current_reply_parent_id = ''
             reply_content.placeholder = '请输入要回复的内容:'
             reply_content.value = ''
@@ -401,10 +421,6 @@
                 console.error('保存失败！')
             }
         })
-
-
-
-
 
 
     </script>
