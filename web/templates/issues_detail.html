@@ -204,6 +204,7 @@
                 new TomSelect(el, {
                     create: false,         // false=只允许选列表中有的，true=允许用户自己输入新值打标签
                     placeholder: "请点击并搜索...",
+                    plugins: ['clear_button'],  // 💥 加上这个插件，开启一键清空大法！
                     sortField: {           // 选项按照文本内容排序
                         field: "text",
                         direction: "asc"
@@ -250,8 +251,9 @@
 
                     // 💥 重点在这里：新增 blur 回调！
                     // 当用户写完描述，鼠标点到外面去的时候，就会静默触发这行代码
-                    blur: function (text) {
-                        editFetch({'field':'desc','vlaue':text});
+                    blur: function () {
+                        console.log("准备发送给后端的文本是：", myVditor.getValue());
+                        editFetch({'field':'desc','value':myVditor.getValue()});
                     },
 
                     upload: {
