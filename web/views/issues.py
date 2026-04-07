@@ -1,13 +1,14 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from web import models
-from web.forms.issues import IssuesModelForm
+from web.forms.issues import IssuesModelForm,IssuesReplyModelForm
 from utils.pagination import Pagination
 
 
 
-# 展示&新建
+# 展示&新建问题
 def issues(request, proj_id):
     if request.method == "GET":
         print(f'get请求:{request.GET}')
@@ -39,7 +40,7 @@ def issues(request, proj_id):
     return JsonResponse({'status': False, 'errors': form.errors.get_json_data()})
 
 
-# 编辑
+# 编辑问题
 def issues_detail(request,proj_id,issues_id):
     issues_obj = models.Issues.objects.filter(id=issues_id).first()
 
@@ -60,19 +61,41 @@ def issues_detail(request,proj_id,issues_id):
 
 
 # 展示&新建评论
+@csrf_exempt
 def issues_record(request,proj_id,issues_id):
-    # 按时间正序排,防止子评论早出现找不到父评论
-    reply_objs = models.IssuesReply.objects.filter(issues_id=issues_id).order_by('create_datetime')
-    reply_obj_list = []
-    for row in reply_objs:
-        data = {
-            'id':row.id,
-            'reply_type':row.reply_type,
-            'creator_name':row.creator.name,
-            'content':row.content,
-            'create_datetime':row.create_datetime,
-            'parent_id':row.parent.id if row.parent else ''
-        }
-        reply_obj_list.append(data)
+    if request.method == "GET":
+        # 按时间正序排,防止子评论早出现找不到父评论
+        reply_objs = models.IssuesReply.objects.filter(issues_id=issues_id).order_by('create_datetime')
+        reply_obj_list = []
+        for row in reply_objs:
+            data = {
+                'id':row.id,
+                'reply_type':row.get_reply_type_display(),
+                'creator_name':row.creator.name,
+                'content':row.content,
+                'create_datetime':row.create_datetime,
+                'parent_id':row.parent.id if row.parent else ''
+            }
+            reply_obj_list.append(data)
+        return JsonResponse({'status':True,'reply_obj_list':reply_obj_list})
 
-    return JsonResponse({'status':True,'reply_obj_list':reply_obj_list})
+    # 新建评论
+    form = IssuesReplyModelForm(data=request.POST)
+    if form.is_valid():
+        form.instance.reply_type = 2
+        form.instance.issues_id = issues_id
+        form.instance.creator_id = request.tracer.user.id
+        reply_obj = form.save()
+        data = {
+            'id': reply_obj.id,
+            'reply_type': reply_obj.get_reply_type_display(),
+            'creator_name': reply_obj.creator.name,
+            'content': reply_obj.content,
+            'create_datetime': reply_obj.create_datetime,
+            'parent_id': reply_obj.parent.id if reply_obj.parent else ''
+        }
+        return JsonResponse({'status':True,'reply_obj':data})
+    return JsonResponse({'status':False,'errors':form.errors.get_json_data()})
+
+
+

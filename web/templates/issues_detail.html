@@ -108,12 +108,9 @@
 
 
                                     <div class="d-grid mt-4">
-                                        <button type="button" class="btn btn-dark btn-lg" id="confirm_button">确 定
-                                        </button>
-                                        <button type="button" class="btn btn-light btn-lg" id="#">
-                                            <a href="{% url 'web:issues' proj_id=request.tracer.project.id %}"
-                                               class="text-decoration-none text-primary">取 消</a>
-                                        </button>
+                                        <button type="button" class="btn btn-dark btn-lg" id="confirm_button">确 定</button>
+
+                                        <button type="button" class="btn btn-light btn-lg" id="cancel_edit">取 消</button>
                                     </div>
 
                                 </div>
@@ -144,9 +141,12 @@
                             <hr class="text-muted mb-4">
 
                             <div class="reply-input-area">
-                                <textarea class="form-control mb-3" rows="4"
+                                <textarea id="reply_content" class="form-control mb-3" rows="4"
                                           placeholder="请输入要回复的内容"></textarea>
-                                <button type="button" class="btn btn-dark btn-lg w-100" id="#">发 送</button>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-dark btn-lg flex-grow-1" id="reply_submit">发 送</button>
+                                    <button type="button" class="btn btn-light btn-lg d-none" id="reply_cancel">取消回复</button>
+                                </div>
                             </div>
                         </div>
 
@@ -168,9 +168,16 @@
 
     <script>
         const confirm_button = document.getElementById('confirm_button')
+        const cancel_edit = document.querySelector('#cancel_edit')
+        const reply_submit = document.querySelector('#reply_submit')
+        const reply_cancel = document.querySelector('#reply_cancel')
+        const reply_content = document.querySelector("#reply_content")
+        let current_reply_parent_id = ''
+
         const formElement = document.getElementById('issues_form')
         const confirmUrl = '{% url 'web:issues_detail' proj_id=request.tracer.project.id issues_id=issues_obj.id %}';
         const replyUrl = '{% url 'web:issues_record' proj_id=request.tracer.project.id issues_id=issues_obj.id %}'
+
         let myVditor;
 
 
@@ -264,7 +271,7 @@
             }
         });
 
-        // 监听确定按钮
+        // 监听问题编辑,确定按钮
         confirm_button.addEventListener('click', async function () {
             document.querySelectorAll('.err-msg').forEach(Box => Box.innerText = '');
             let formData = new FormData(formElement)
@@ -286,6 +293,10 @@
 
         })
 
+        // 监听问题编辑,取消按钮
+        cancel_edit.addEventListener('click',function (){
+            location.assign('{% url 'web:issues' proj_id=request.tracer.project.id %}')
+        })
 
         // 获取该问题中的所有操作记录
         async function initIssuesRecord() {
@@ -297,7 +308,7 @@
         }
 
         // 评论的挂载
-        function createRecordNode(nodeDict){
+        function createRecordNode(nodeDict) {
             // 评论模板
             const recordTemplate = `
             <div class="d-flex mb-4" id="record-${nodeDict.id}">
@@ -317,7 +328,9 @@
                         <span class="ms-4"><i class="fa-regular fa-user me-1"></i>${nodeDict.creator_name}</span>
                         <span class="ms-4"><i class="fa-regular fa-clock me-1"></i>${nodeDict.create_datetime}</span>
                         <a href="javascript:void(0);"
-                           class="ms-4 text-primary text-decoration-none">
+                           class="ms-4 text-primary text-decoration-none reply-btn"
+                            data-id=${nodeDict.id}
+                            data-name=${nodeDict.creator_name}>
                             <i class="fa-regular fa-comment-dots me-1"></i>回复
                         </a>
                     </div>
@@ -327,13 +340,72 @@
             </div>
             `
             // 实现挂载
-            if (nodeDict.parent_id){
+            if (nodeDict.parent_id) {
                 const parentBox = document.querySelector(`#record-${nodeDict.parent_id} .child-list`)
-                if(parentBox) parentBox.insertAdjacentHTML('beforeend',recordTemplate);
+                if (parentBox) parentBox.insertAdjacentHTML('beforeend', recordTemplate);
 
-            }else{
-                document.querySelector(`.action-history-list`).insertAdjacentHTML('beforeend',recordTemplate)
+            } else {
+                document.querySelector(`.action-history-list`).insertAdjacentHTML('beforeend', recordTemplate)
             }
         }
+
+        // 监听回复按钮（事件委托）
+        document.querySelector('.action-history-list').addEventListener('click', function (event) {
+            // 检查点中的是不是回复按钮
+            const replyBtn = event.target.closest('.reply-btn')
+            if (replyBtn) {
+                event.preventDefault();         // 阻止a标签默认行为
+                const parent_id = replyBtn.dataset.id
+                const parent_name = replyBtn.dataset.name
+                current_reply_parent_id = parent_id
+                reply_content.placeholder = `正在回复@${parent_name}:`
+                reply_content.focus();
+                reply_cancel.classList.remove('d-none')
+            }
+        })
+
+        // 监听取消回复按钮
+        reply_cancel.addEventListener('click',function (){
+            resetReplyStatus()
+        })
+
+        // 取消回复重置内容
+        function resetReplyStatus(){
+            current_reply_parent_id = ''
+            reply_content.placeholder = '请输入要回复的内容:'
+            reply_content.value = ''
+            reply_cancel.classList.add('d-none')
+        }
+
+        // 发送回复
+        reply_submit.addEventListener('click', async function () {
+            const content = reply_content.value
+            if (!content) {
+                alert('请填写回复内容！')
+                return
+            }
+            let formData = new FormData()
+            formData.append('content', content)
+            if (current_reply_parent_id) {
+                formData.append('parent', current_reply_parent_id)
+            }
+            let res = await fetch(replyUrl, {
+                method: 'POST',
+                body: formData
+            })
+            let data = await res.json()
+            if (data.status) {
+                createRecordNode(data.reply_obj)
+                resetReplyStatus()
+            } else {
+                console.error('保存失败！')
+            }
+        })
+
+
+
+
+
+
     </script>
 {% endblock %}

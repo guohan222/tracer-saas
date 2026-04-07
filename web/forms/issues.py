@@ -52,3 +52,11 @@ class IssuesModelForm(Bootstrap,forms.ModelForm):
         parent_list.extend(parent_obj_list)
         self.fields['parent'].choices = parent_list
 
+
+
+
+class IssuesReplyModelForm(forms.ModelForm):
+    class Meta:
+        model = models.IssuesReply
+        fields = ('content','parent')
+
