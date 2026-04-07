@@ -1,5 +1,6 @@
+
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from web import models
@@ -50,19 +51,71 @@ def issues_detail(request,proj_id,issues_id):
         form = IssuesModelForm(request,instance=issues_obj)
         return render(request,'issues_detail.html',{'form':form,'issues_obj':issues_obj})
 
-
-
-
+    # 更新数据
     """
-    form = IssuesModelForm(request, data=request.POST,instance=issues_obj)
-    if form.is_valid():
-        # exclude = ['project', 'creator', 'create_datetime', 'latest_update_datetime']
-        form.instance.project_id = proj_id
-        form.instance.creator = request.tracer.user
-        form.save()
-        return JsonResponse({'status': True})
-    return JsonResponse({'status': False, 'errors': form.errors.get_json_data()})
+    普通文本字段：subject、desc、start_date、end_date
+    choices字段：status、priority、mode
+    页面FK字段：issues_type、module、assign、parent
+    页面M2M字段：attention
+    
+    前端传来的数据格式：{field:xxx,value:xxx}
     """
+    field = request.POST.get('field')
+    value = request.POST.get('value')
+    # 拿到该字段对象
+    field_obj = models.Issues._meta.get_field(field)
+
+    # 1. 普通文本字段
+    if str(field) in ['subject','desc','start_date','end_date']:
+        # 判断值是否为空，为空则检查：是否允许为空
+        if not value:
+            if not field_obj.null:
+                return JsonResponse({'status':False,'errors':'值不能为空！'})
+            # 否则允许为空，进行更新保存
+            setattr(issues_obj,field,None)
+            issues_obj.save(update_fields=[field,])
+            record_content = f'{field_obj.verbose_name}更新为:{value}'
+        else:
+            setattr(issues_obj, field, value)
+            issues_obj.save(update_fields=[field, ])
+            record_content = f'{field_obj.verbose_name}更新为:{value}'
+
+        # 创建一条操作评论
+        reply_obj = models.IssuesReply.objects.create(
+            reply_type = 1,
+            issues_id = issues_id,
+            creator_id = request.tracer.user.id,
+            content = record_content
+        )
+        # 给前端返回该评论进行挂载时需要的东西
+        data = {
+            'id': reply_obj.id,
+            'reply_type': reply_obj.get_reply_type_display(),
+            'creator_name': reply_obj.creator.name,
+            'content': reply_obj.content,
+            'create_datetime': reply_obj.create_datetime,
+            'parent_id': reply_obj.parent.id if reply_obj.parent else ''
+        }
+        return JsonResponse({'status':True,'reply_obj':data})
+
+    return HttpResponse('sb')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

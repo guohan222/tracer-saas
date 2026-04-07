@@ -108,8 +108,8 @@
 
 
                                     <div class="d-grid mt-4">
-{#                                        <button type="button" class="btn btn-dark btn-lg" id="confirm_button">确 定#}
-{#                                        </button>#}
+                                        {#                                        <button type="button" class="btn btn-dark btn-lg" id="confirm_button">确 定#}
+                                        {#                                        </button>#}
 
                                         <button type="button" class="btn btn-dark btn-lg" id="cancel_edit">返 回
                                         </button>
@@ -248,6 +248,12 @@
                         djangoTextarea.value = text;
                     },
 
+                    // 💥 重点在这里：新增 blur 回调！
+                    // 当用户写完描述，鼠标点到外面去的时候，就会静默触发这行代码
+                    blur: function (text) {
+                        editFetch({'field':'desc','vlaue':text});
+                    },
+
                     upload: {
                         accept: 'image/*, .wav',
                         url: '{% url 'web:wiki_upload' proj_id=request.tracer.project.id %}', // 你的 Django 处理图片的路由
@@ -292,8 +298,8 @@
         async function editFetch(content) {
             document.querySelectorAll('.err-msg').forEach(Box => Box.innerText = '');
             let formData = new FormData(issues_form)
-            formData.append('field',content.field)
-            formData.append('value',content.value)
+            formData.append('field', content.field)
+            formData.append('value', content.value)
 
             let res = await fetch(editUrl, {
                 method: 'POST',
@@ -302,7 +308,9 @@
             let data = await res.json()
             console.log(data)
             if (data.status) {
-                // location.assign('{% url 'web:issues' proj_id=request.tracer.project.id %}')
+                // 编辑成功生成一条操作记录
+                createRecordNode(data.reply_obj)
+
             } else {
                 let errors = data.errors
                 for (let field in errors) {
