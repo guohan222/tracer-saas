@@ -253,7 +253,7 @@
                     // 当用户写完描述，鼠标点到外面去的时候，就会静默触发这行代码
                     blur: function () {
                         console.log("准备发送给后端的文本是：", myVditor.getValue());
-                        editFetch({'field':'desc','value':myVditor.getValue()});
+                        editFetch({'field': 'desc', 'value': myVditor.getValue()});
                     },
 
                     upload: {
@@ -291,7 +291,15 @@
         issues_form.addEventListener('change', function (event) {
             // 找到发生改变的东西
             const changeElement = event.target
-            const changeDict = {'field': changeElement.name, 'value': changeElement.value}
+            let changeDict = null
+
+            if (changeElement.multiple) {
+                let res = Array.from(changeElement.selectedOptions).map(obj => obj.value)
+                changeDict = {'field': changeElement.name, 'value': res}
+            } else {
+                changeDict = {'field': changeElement.name, 'value': changeElement.value}
+            }
+
             console.log(changeDict)
             editFetch(changeDict)
         })
@@ -301,7 +309,14 @@
             document.querySelectorAll('.err-msg').forEach(Box => Box.innerText = '');
             let formData = new FormData(issues_form)
             formData.append('field', content.field)
-            formData.append('value', content.value)
+
+            if (Array.isArray(content.value)) {
+                // 如果是数组（多选），必须循环 append！
+                // 这样发出的包就是 value=12 & value=13，后端 getlist 才能完美接住！
+                content.value.forEach(item => formData.append('value', item))
+            }else{
+                formData.append('value', content.value)
+            }
 
             let res = await fetch(editUrl, {
                 method: 'POST',

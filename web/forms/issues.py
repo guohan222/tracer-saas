@@ -40,7 +40,9 @@ class IssuesModelForm(Bootstrap,forms.ModelForm):
         self.fields['module'].choices = module_list
 
         # 3. 限制问题指派和关注中只能选择该项目的参与者和创建者
-        user_list = [(request.tracer.user.id,request.tracer.user.name)]
+            # 项目创建者
+        user_list = [(request.tracer.project.creator.id,request.tracer.project.creator.name)]
+            # 项目参与者
         user_obj_list = models.Participants.objects.filter(project_id=request.tracer.project.id).values_list('user_id','user__name')
         user_list.extend(user_obj_list)
         self.fields['assign'].choices = [('','没有选择任何项')] + user_list

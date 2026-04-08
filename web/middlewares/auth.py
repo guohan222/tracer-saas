@@ -56,7 +56,7 @@ class AuthMiddleware(MiddlewareMixin):
             # 如果是我创建的则让其通过
             request.tracer.project =project_obj
             return None
-        participants_obj = models.Participants.objects.filter(user=request.tracer.user,id=project_id).first()
+        participants_obj = models.Participants.objects.filter(user=request.tracer.user,project_id=project_id).first()
         if participants_obj:
             # 如果是我参加的
             request.tracer.project = participants_obj.project

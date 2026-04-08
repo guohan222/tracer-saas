@@ -1,3 +1,4 @@
+from django.core.signals import request_started
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -91,7 +92,7 @@ def issues_detail(request, proj_id, issues_id):
             # 否则允许为空，进行更新保存
             setattr(issues_obj, field, None)
             issues_obj.save(update_fields=[field, ])
-            record_content = f'{field_obj.verbose_name}更新为:{value}'
+            record_content = f'{field_obj.verbose_name}更新为空'
         else:
             print(value)
             setattr(issues_obj, field, value)
@@ -110,15 +111,15 @@ def issues_detail(request, proj_id, issues_id):
                 return JsonResponse({'status': False, 'errors': '值不能为空！'})
             setattr(issues_obj, field, None)
             issues_obj.save(update_fields=[field])
-            record_content = f'{field_obj.verbose_name}更新为:{value}'
+            record_content = f'{field_obj.verbose_name}更新为空'
 
         else:  # 不为空则检测FK字段有没有其他要求，比如assign只能为该项目中的参与者或者创建者
 
             # 如果字段为assign,则要判断能否根据这个value找到属于该项目的人，如果不能则表明操作者通过手段，试图派给不属于该项目中的人
             if field == 'assign':
                 # 检测是否派给了创建者
-                if value == str(request.tracer.user.id):
-                    instance = request.tracer.user
+                if value == str(request.tracer.project.creator.id):
+                    instance = request.tracer.project.creator
                 else:  # 否则是派给了参与者，则需检测能否根据这个value(此时为id)在这个项目中找到具体的人
                     participants_obj = models.Participants.objects.filter(project_id=proj_id, user_id=value).first()
                     if participants_obj:
@@ -143,6 +144,51 @@ def issues_detail(request, proj_id, issues_id):
                 issues_obj.save(update_fields=[field])
                 record_content = f'{field_obj.verbose_name}更新为:{str(instance)}'
 
+        data = create_reply_record(record_content)
+        return JsonResponse({'status': True, 'reply_obj': data})
+
+
+    # 3. choices字段处理       status、priority、mode
+    if field in ['priority', 'status', 'mode']:
+        select_text = None
+        for key,text in field_obj.choices:
+            if str(key) == value:
+                select_text = text
+        if not select_text:
+            return JsonResponse({'status': False, 'errors': '选择的值不存在'})
+        setattr(issues_obj,field,value)
+        issues_obj.save(update_fields=[field])
+        record_content = f'{field_obj.verbose_name}更新为:{select_text}'
+        data = create_reply_record(record_content)
+        return JsonResponse({'status': True, 'reply_obj': data})
+
+    # 4. M2M字段      attention
+    if field == 'attention':
+        # {field:xxx,value:[id,id,xx]}
+        value = request.POST.getlist('value')
+        print(type(value))
+        print(f'm2m：{value}')
+        if not isinstance(value,list):
+            return JsonResponse({'status':False,'error':'数据格式错误'})
+        if not value:
+            issues_obj.attention.set(value)
+            record_content = f'{field_obj.verbose_name}更新为空'
+        else:   # 关注者同assign一样必须是属于该项目的人
+            user_dict = {str(request.tracer.project.creator.id):request.tracer.project.creator.name}
+            participants_list = models.Participants.objects.filter(project_id=proj_id)
+            for item in participants_list:
+                user_dict[str(item.user.id)] = item.user.name
+
+            new_attention_name = []
+            for user_id in value:
+                user_name = user_dict.get(str(user_id),'')
+                if not user_name:
+                    # 必须全部都合理
+                    return JsonResponse({'status': False, 'errors': '选择的值不存在'})
+                new_attention_name.append(user_name)
+
+            issues_obj.attention.set(value)
+            record_content = f'{field_obj.verbose_name}更新为:{new_attention_name}'
         data = create_reply_record(record_content)
         return JsonResponse({'status': True, 'reply_obj': data})
 

@@ -139,7 +139,7 @@ SMS_TEMPLATE_ID = {
 
 # url白名单
 URL_WHITE_LIST = [
-    '/send/sms/',
+    '/send/sms',
     '/img/code/',
     '/register/',
     '/login/',
