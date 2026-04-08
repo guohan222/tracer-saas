@@ -1,6 +1,7 @@
 from django.core.signals import request_started
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
+from django.utils.safestring import mark_safe
 from django.views.decorators.csrf import csrf_exempt
 
 from web import models
@@ -8,13 +9,99 @@ from web.forms.issues import IssuesModelForm, IssuesReplyModelForm
 from utils.pagination import Pagination
 
 
+
+class CheckFilter(object):
+    """
+        自定义生成器组件，构造筛选按钮（核心url的构建）
+    1. 字段名，用于构建查询参数字段
+    2. 数据源，将哪些数据构建为按钮
+    3. request,用于查询当前查询参数，判断按钮是否进行高亮、预测url
+
+    """
+    def __init__(self,field,name,data_list,request):
+        self.field = field
+        self.title = name
+        self.data_list = data_list
+        self.request = request
+
+    def __iter__(self):
+        # 将字段可以选择的值：生成筛选按钮，并预测未来点击该按钮时，url中该字段的查询是否要携带这个值
+        for item in self.data_list:
+            key = str(item[0])
+            text = item[1]
+            ck = ''
+
+            # 目前该字段在url中的值
+            # 后面利用这个变量来设置，点击这个值对应的按钮时，该字段查询的参数
+            value_list = self.request.GET.getlist(self.field)
+
+            # 如果循环到的这个choices的值在查询参数中，则对这个值的按钮进行高亮
+            if key in value_list:
+                # 进行高亮
+                ck = 'checked'
+                # 当前这个值在url里面了，所以这个值生成的按钮下次点击时肯定是取消这个筛选，
+                # 所以要在value_list剔除这个key,确保如果真点击了这个按钮后，该值不在里面即不再url中
+                value_list.remove(key)
+            else:
+                # 不在则表明，下次点击这按钮时，代表要用这个条件查询，则加入value_list
+                value_list.append(key)
+
+
+            # 进行生成：该值对应的按钮未来点击时，url中的参数是什么（有还是没有这个key，在上面value_list中表明了答案）
+            query_dict = self.request.GET.copy()
+            # 允许copy的request.GET可以进行更改
+            query_dict._mutable = True
+            # request.GET获取的查询参数中，只改变该字段，其他字段不受影响       eg：{name:1,age:2} ————》{name:2,age:2}
+            query_dict.setlist(self.field,value_list)
+            if 'page' in query_dict:
+                query_dict.pop('page')
+
+            # 将变更的request.GET变成url中查询参数形式                      eg：?字段1=值1&字段1=值2&字段2=值1形式
+            params_url = query_dict.urlencode()
+            if params_url:
+                url = f'{self.request.path_info}?{params_url}'
+            else:
+                url = f'{self.request.path_info}'
+            tpl = f'<a class="cell" href="{url}"><input type="checkbox" {ck} /> {text}</a>'
+
+            yield mark_safe(tpl)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 展示&新建问题
 def issues(request, proj_id):
+    # # 如果用户进行筛选，url查询参数示例：?issues_type=1&status=2&status=3（同字段或，不同字段且）
     if request.method == "GET":
-        print(f'get请求:{request.GET}')
+        # 首先定一个允许的查询字段列表，然后循环这个列表看url中有没有查询参数字段在这个列表中如果有则以这个字段名__in为键，getlist到的值为值，存储到condition字典里面
+        print(f'issues中get请求:{request.GET}')
+        # 允许进行筛选的字段
+        allowed_fields = ['issues_type','priority','status','assign','attention']
+        condition = {}
+        for item in allowed_fields:
+            # 检测用户url中查询参数是否在其中
+            if not request.GET.get(item):
+                continue
+            # 如果有将查询参数记录下
+            condition[f'{item}__in'] = request.GET.getlist(item)
+
         form = IssuesModelForm(request)
-        # 分页获取数据
-        queryset = models.Issues.objects.filter(project_id=proj_id)
+        # 根据查询条件,分页获取数据
+        queryset = models.Issues.objects.filter(project_id=proj_id,**condition)
         page_obj = Pagination(
             current_page=request.GET.get('page'),
             all_count=queryset.count(),
@@ -26,9 +113,17 @@ def issues(request, proj_id):
         content = {
             'issues_object_list': issues_obj_list,
             'page_html': page_obj.page_html(),
+            'status_filter':CheckFilter('status','状态',models.Issues.status_choices,request),
+            'priority_filter':CheckFilter('priority','优先级',models.Issues.priority_choices,request),
             'form': form
         }
         return render(request, 'issues.html', content)
+
+
+
+
+
+
 
     form = IssuesModelForm(request, data=request.POST)
     if form.is_valid():

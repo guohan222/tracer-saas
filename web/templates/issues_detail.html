@@ -291,8 +291,11 @@
         issues_form.addEventListener('change', function (event) {
             // 找到发生改变的东西
             const changeElement = event.target
-            let changeDict = null
+            if (!changeElement.name){
+                return
+            }
 
+            let changeDict = null
             if (changeElement.multiple) {
                 let res = Array.from(changeElement.selectedOptions).map(obj => obj.value)
                 changeDict = {'field': changeElement.name, 'value': res}

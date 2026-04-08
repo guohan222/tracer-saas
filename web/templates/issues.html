@@ -9,6 +9,54 @@
 
     <link rel="stylesheet" href="{% static 'plugin/vditor/index.css' %}">
 
+    <style>
+        /* 针对筛选按钮组的整体美化 */
+        .cell {
+            display: inline-flex; /* 让框和文字完美垂直居中对齐 */
+            align-items: center;
+            gap: 5px; /* 框和文字之间留出一点呼吸感 */
+            margin-right: 20px; /* 每个选项之间拉开距离 */
+            margin-bottom: 10px; /* 防止换行时上下挤在一起 */
+            color: #333; /* 扔掉丑陋的默认蓝色，改成高级灰/黑 */
+            text-decoration: none; /* 极其关键：干掉超级难看的下划线！ */
+            cursor: pointer; /* 鼠标放上去变成小手，提示可点击 */
+            font-size: 14px;
+        }
+
+        /* 鼠标悬停时的互动反馈 */
+        .cell:hover {
+            color: #0d6efd; /* 鼠标放上去时变成主题蓝，体验拉满 */
+        }
+
+        /* 让里面的 input 和 label 也不要阻挡鼠标点击事件 */
+        .cell input[type="checkbox"], .cell label {
+            cursor: pointer;
+            margin: 0; /* 清除浏览器自带的多余边距 */
+        }
+
+        /* 每一行的容器，采用左右布局 */
+        .filter-row {
+            display: flex;
+            align-items: flex-start; /* 顶部对齐，防止选项换行时标题居中变丑 */
+            margin-bottom: 15px;
+        }
+
+        /* 左侧的标题样式 */
+        .filter-title {
+            width: 80px; /* 给标题固定宽度，保证上下不同筛选行的选项能对齐！ */
+            color: #8c8c8c; /* 高级灰 */
+            padding-top: 2px; /* 稍微往下走一点，和右边的复选框居中对齐 */
+            flex-shrink: 0; /* 防止标题被右边长内容挤压变形 */
+        }
+
+        /* 右侧的选项容器 */
+        .filter-options {
+            flex: 1; /* 占据剩下的所有空间 */
+        }
+
+
+    </style>
+
 {% endblock %}
 
 {% block content %}
@@ -20,9 +68,28 @@
                     <div class="card-header bg-light text-muted fw-bold py-2" style="font-size: 15px;">
                         <i class="fa-solid fa-magnifying-glass me-1"></i> 筛选
                     </div>
+
                     <div class="card-body">
-                        <p class="text-muted mb-0" style="font-size: 14px;">筛选选项</p>
+                        <div class="filter-row">
+                            <div class="filter-title">{{ status_filter.title }}</div>
+                            <div class="filter-options">
+                                {% for item in status_filter %}
+                                    {{ item }}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="filter-row">
+                            <div class="filter-title">{{ priority_filter.title }}</div>
+                            <div class="filter-options">
+                                {% for item in priority_filter %}
+                                    {{ item }}
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
+
+
                 </div>
             </div>
 
@@ -61,14 +128,17 @@
                                                 <i class="fa-solid fa-circle"></i>
                                             </span>
                                             <span class="fw-bold text-primary me-3" style="font-size: 15px;">
-                                                <a href="{% url 'web:issues_detail' proj_id=item.project.id issues_id=item.id %}" class="text-decoration-none fw-bold">{% string_just item.id %}</a>
+                                                <a href="{% url 'web:issues_detail' proj_id=item.project.id issues_id=item.id %}"
+                                                   class="text-decoration-none fw-bold">{% string_just item.id %}</a>
                                             </span>
-                                            <a href="{% url 'web:issues_detail' proj_id=item.project.id issues_id=item.id %}" class="text-decoration-none text-dark fw-bold" style="font-size: 15px;">
+                                            <a href="{% url 'web:issues_detail' proj_id=item.project.id issues_id=item.id %}"
+                                               class="text-decoration-none text-dark fw-bold" style="font-size: 15px;">
                                                 {{ item.subject }}
                                             </a>
                                         </div>
 
-                                        <div class="d-flex align-items-center text-muted" style="font-size: 13px; margin-left: 24px;">
+                                        <div class="d-flex align-items-center text-muted"
+                                             style="font-size: 13px; margin-left: 24px;">
                                             <span class="badge bg-primary text-white me-3 px-2 py-1">
                                                 {{ item.issues_type }}
                                             </span>
@@ -216,6 +286,7 @@
     <script src="{% static 'plugin/flatpickr/l10n/zh.js' %}"></script>
 
     <script>
+        const filter_options = document.querySelector('.card-body')
         const newIssuesModal = document.getElementById('newIssuesModal')
         const modalTile = document.getElementById('newIssuesModalLabel')
         const confirm_button = document.getElementById('confirm_button')
@@ -341,6 +412,12 @@
             }
         });
 
+        // 监听被点击的checkbox
+        filter_options.addEventListener('change', function (event) {
+            let ckElement = event.target
+            console.log(ckElement.parentElement.getAttribute('href'))
+            location.href = ckElement.parentElement.getAttribute('href')
+        })
 
         // 监听确定按钮
         confirm_button.addEventListener('click', async function () {
