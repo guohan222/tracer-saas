@@ -29,6 +29,7 @@ urlpatterns = [
                                        path('issues/', issues.issues, name='issues'),
                                        path('issues/detail/<int:issues_id>/', issues.issues_detail, name='issues_detail'),
                                        path('issues/record/<int:issues_id>/', issues.issues_record, name='issues_record'),
+                                       path('issues/invite/url/', issues.invite_url, name='invite_url'),
 
                                        path('statistics/', manage.statistics, name='statistics'),
 
@@ -51,5 +52,7 @@ urlpatterns = [
                                        path('settings/del/', settings.settings_del, name='settings_del'),
 
                                    ], None, None)),
+
+path('inviter/join/<str:code>', issues.invite_join, name='invite_join'),
 
 ]

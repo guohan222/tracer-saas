@@ -117,7 +117,7 @@
 
                             <button class="btn btn-primary btn-sm px-3" style="border-radius: 3px;"
                                     data-bs-toggle="modal"
-                                    data-bs-target="#newIssuesModal"
+                                    data-bs-target="#newInviteModal"
                                     data-act='invite'
                             >邀请成员
                             </button>
@@ -188,13 +188,13 @@
     </div>
 
 
-    <!-- 公用模态框 -->
+    <!-- 新建问题模态框 -->
     <div class="modal fade modal-lg" id="newIssuesModal" tabindex="-1" aria-labelledby="newIssuesModalLabel"
          aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="newIssuesModalLabel">新建/编辑问题</h5>
+                    <h5 class="modal-title" id="newIssuesModalLabel">新建问题</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -279,6 +279,56 @@
             </div>
         </div>
     </div>
+
+    <!-- 邀请模态框 -->
+    <div class="modal fade" id="newInviteModal" tabindex="-1" aria-labelledby="newInviteModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newInviteModalLabel">邀请成员</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="inviteForm">
+                        {% csrf_token %}
+                        {% for field in invite_form %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label fw-bold">
+                                    {{ field.label }}
+                                    {% if field.help_text %}
+                                        <span class="text-muted fw-normal fs-6">（{{ field.help_text }}）</span>
+                                    {% endif %}
+                                </label>
+
+                                {{ field }}
+
+                                <div class="text-danger mt-1 err-msg" style="font-size: 13px;"></div>
+                            </div>
+                        {% endfor %}
+
+                        <button type="button" class="btn btn-success" id="create_Invite">生成邀请码</button>
+                    </form>
+
+                    <div id="inviteArea" class="mt-4 d-none">
+                        <hr/>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted">邀请链接</span>
+                            <input type="text" class="form-control bg-white" id="inviteUrl" readonly>
+                            <button class="btn btn-primary" type="button" id="btnCopyUrl">复制链接</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- copy成功提示框-->
+    <div id="successToast"
+         style="position: fixed; top: 30px; left: 50%; transform: translateX(-50%); background-color: #fff; border-left: 4px solid #52c41a; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 12px 24px; border-radius: 4px; display: none; z-index: 9999; font-size: 14px; color: #333; align-items: center;">
+        <i class="fa-solid fa-circle-check" style="margin-right: 8px; color: #52c41a;"></i>
+        <span id="toastMsg">复制成功</span>
+    </div>
 {% endblock %}
 
 
@@ -293,9 +343,17 @@
         const filter_options = document.querySelector('.card-body')
         const newIssuesModal = document.getElementById('newIssuesModal')
         const modalTile = document.getElementById('newIssuesModalLabel')
+
         const confirm_button = document.getElementById('confirm_button')
+        const create_Invite = document.querySelector('#create_Invite')
+        const urlInput = document.getElementById('inviteUrl');
+        const btnCopyUrl = document.querySelector('#btnCopyUrl')
+
         const formElement = document.getElementById('issues_form')
+        const inviteForm = document.querySelector('#inviteForm')
+
         const confirmUrl = '{% url 'web:issues' proj_id=request.tracer.project.id %}';
+        const inviteUrl = '{% url 'web:invite_url' proj_id=request.tracer.project.id %}';
         let myVditor;
 
 
@@ -405,7 +463,6 @@
             const button = event.relatedTarget
             const act = button.getAttribute('data-act')
 
-
             document.querySelectorAll('.err-msg').forEach(Box => Box.innerText = '');
             if (act === 'add') {
                 modalTile.innerText = '新建问题';
@@ -423,8 +480,6 @@
                     }
                 });
 
-            } else {
-                modalTile.innerText = '邀请成员';
             }
         });
 
@@ -465,5 +520,62 @@
             }
 
         })
+
+        // 监听生成邀请链接按钮
+        create_Invite.addEventListener('click', async function () {
+
+            document.querySelectorAll('.err-msg').forEach(Box => Box.innerText = '');
+            const originalText = create_Invite.innerText;
+            create_Invite.innerText = "检测中...";
+            create_Invite.disabled = true; // 禁用按钮，变灰！防止狂点！
+
+            let formData = new FormData(inviteForm)
+            console.log(formData)
+            let res = await fetch(inviteUrl, {
+                method: 'POST',
+                body: formData
+            })
+            let data = await res.json()
+            console.log(data)
+            if (data.status) {
+                // 显示邀请码链接框，填充数据
+                document.querySelector('#inviteArea').classList.remove('d-none')
+                document.querySelector('#inviteUrl').value = data.url
+            } else {
+                let errors = data.errors
+                for (let field in errors) {
+                    let errorElement = document.getElementById(`id_${field}`).nextElementSibling
+                    errorElement.innerText = errors[field][0].message
+                }
+            }
+            create_Invite.innerText = originalText;
+            create_Invite.disabled = true; // 禁用按钮，变灰！防止狂点！
+
+        })
+
+        // 复制邀请url
+        btnCopyUrl.addEventListener('click', function () {
+            // 强行选中输入框里的文字（产生蓝色高亮视觉效果）
+            urlInput.select();
+            // 执行浏览器的原生复制命令
+            document.execCommand('copy');
+            showSuccessToast('复制成功！')
+
+        })
+
+
+        // copy成功弹出框
+        function showSuccessToast(message) {
+            const toast = document.getElementById('successToast');
+            document.getElementById('toastMsg').innerText = message;
+
+            toast.style.display = 'flex'; // 让它显现出来
+
+            // 设定一个定时器
+            setTimeout(() => {
+                toast.style.display = 'none';
+                window.location.reload()
+            }, 800);
+        }
     </script>
 {% endblock %}

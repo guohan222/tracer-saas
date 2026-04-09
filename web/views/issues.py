@@ -1,13 +1,13 @@
-from django.core.signals import request_started
+from django.urls import reverse
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.utils.safestring import mark_safe
 from django.views.decorators.csrf import csrf_exempt
 
+from utils.encrypt import uid
 from web import models
-from web.forms.issues import IssuesModelForm, IssuesReplyModelForm
+from web.forms.issues import IssuesModelForm, IssuesReplyModelForm, ProjectInviteModelForm
 from utils.pagination import Pagination
-
 
 
 class CheckFilter(object):
@@ -18,7 +18,8 @@ class CheckFilter(object):
     3. request,用于查询当前查询参数，判断按钮是否进行高亮、预测url
 
     """
-    def __init__(self,field,data_list,request):
+
+    def __init__(self, field, data_list, request):
         self.field = field
         self.data_list = data_list
         self.request = request
@@ -45,13 +46,12 @@ class CheckFilter(object):
                 # 不在则表明，下次点击这按钮时，代表要用这个条件查询，则加入value_list
                 value_list.append(key)
 
-
             # 进行生成：该值对应的按钮未来点击时，url中的参数是什么（有还是没有这个key，在上面value_list中表明了答案）
             query_dict = self.request.GET.copy()
             # 允许copy的request.GET可以进行更改
             query_dict._mutable = True
             # request.GET获取的查询参数中，只改变该字段，其他字段不受影响       eg：{name:1,age:2} ————》{name:2,age:2}
-            query_dict.setlist(self.field,value_list)
+            query_dict.setlist(self.field, value_list)
             if 'page' in query_dict:
                 query_dict.pop('page')
 
@@ -66,9 +66,8 @@ class CheckFilter(object):
             yield mark_safe(tpl)
 
 
-
 class SelectFilter(object):
-    def __init__(self,field,data_list,request):
+    def __init__(self, field, data_list, request):
         self.field = field
         self.data_list = data_list
         self.request = request
@@ -87,7 +86,7 @@ class SelectFilter(object):
 
             query_dict = self.request.GET.copy()
             query_dict._mutable = True
-            query_dict.setlist(self.field,value_list)
+            query_dict.setlist(self.field, value_list)
 
             if 'page' in query_dict:
                 query_dict.pop('page')
@@ -101,14 +100,6 @@ class SelectFilter(object):
             yield mark_safe(tpl)
 
 
-
-
-
-
-
-
-
-
 # 展示&新建问题
 def issues(request, proj_id):
     # 如果用户进行筛选，url查询参数示例：?issues_type=1&status=2&status=3（同字段或，不同字段且）
@@ -116,7 +107,7 @@ def issues(request, proj_id):
         # 首先定一个允许的查询字段列表，然后循环这个列表看url中有没有查询参数字段在这个列表中如果有则以这个字段名__in为键，getlist到的值为值，存储到condition字典里面
         print(f'issues中get请求:{request.GET}')
         # 允许进行筛选的字段
-        allowed_fields = ['issues_type','priority','status','assign','attention']
+        allowed_fields = ['issues_type', 'priority', 'status', 'assign', 'attention']
         condition = {}
         for item in allowed_fields:
             # 检测用户url中查询参数是否在其中
@@ -126,8 +117,9 @@ def issues(request, proj_id):
             condition[f'{item}__in'] = request.GET.getlist(item)
 
         form = IssuesModelForm(request)
+        invite_form = ProjectInviteModelForm()
         # 根据查询条件,分页获取数据
-        queryset = models.Issues.objects.filter(project_id=proj_id,**condition)
+        queryset = models.Issues.objects.filter(project_id=proj_id, **condition)
         page_obj = Pagination(
             current_page=request.GET.get('page'),
             all_count=queryset.count(),
@@ -136,29 +128,26 @@ def issues(request, proj_id):
         )
         issues_obj_list = queryset[page_obj.start:page_obj.end]
 
-        issues_type_list = models.IssuesType.objects.filter(project_id=proj_id).values_list('id','title')
-        proj_user_list = [(request.tracer.project.creator.id,request.tracer.project.creator.name),]
-        proj_user_list.extend(models.Participants.objects.filter(project_id=proj_id).values_list('user_id','user__name'))
+        issues_type_list = models.IssuesType.objects.filter(project_id=proj_id).values_list('id', 'title')
+        proj_user_list = [(request.tracer.project.creator.id, request.tracer.project.creator.name), ]
+        proj_user_list.extend(
+            models.Participants.objects.filter(project_id=proj_id).values_list('user_id', 'user__name'))
 
         content = {
             'issues_object_list': issues_obj_list,
             'page_html': page_obj.page_html(),
-            'filter_list':[
-                {'title':'状态','filter':CheckFilter('status',models.Issues.status_choices,request)},
-                {'title':'优先级','filter':CheckFilter('priority',models.Issues.priority_choices,request)},
-                {'title':'问题类型','filter':CheckFilter('issues_type',issues_type_list,request)},
-                {'title':'指派','filter':SelectFilter('assign',proj_user_list,request),'class_type':'select'},
-                {'title':'关注者','filter':SelectFilter('attention',proj_user_list,request),'class_type':'select'},
+            'filter_list': [
+                {'title': '状态', 'filter': CheckFilter('status', models.Issues.status_choices, request)},
+                {'title': '优先级', 'filter': CheckFilter('priority', models.Issues.priority_choices, request)},
+                {'title': '问题类型', 'filter': CheckFilter('issues_type', issues_type_list, request)},
+                {'title': '指派', 'filter': SelectFilter('assign', proj_user_list, request), 'class_type': 'select'},
+                {'title': '关注者', 'filter': SelectFilter('attention', proj_user_list, request),
+                 'class_type': 'select'},
             ],
-            'form': form
+            'form': form,
+            'invite_form':invite_form
         }
         return render(request, 'issues.html', content)
-
-
-
-
-
-
 
     form = IssuesModelForm(request, data=request.POST)
     if form.is_valid():
@@ -277,16 +266,15 @@ def issues_detail(request, proj_id, issues_id):
         data = create_reply_record(record_content)
         return JsonResponse({'status': True, 'reply_obj': data})
 
-
     # 3. choices字段处理       status、priority、mode
     if field in ['priority', 'status', 'mode']:
         select_text = None
-        for key,text in field_obj.choices:
+        for key, text in field_obj.choices:
             if str(key) == value:
                 select_text = text
         if not select_text:
             return JsonResponse({'status': False, 'errors': '选择的值不存在'})
-        setattr(issues_obj,field,value)
+        setattr(issues_obj, field, value)
         issues_obj.save(update_fields=[field])
         record_content = f'{field_obj.verbose_name}更新为:{select_text}'
         data = create_reply_record(record_content)
@@ -298,20 +286,20 @@ def issues_detail(request, proj_id, issues_id):
         value = request.POST.getlist('value')
         print(type(value))
         print(f'm2m：{value}')
-        if not isinstance(value,list):
-            return JsonResponse({'status':False,'error':'数据格式错误'})
+        if not isinstance(value, list):
+            return JsonResponse({'status': False, 'error': '数据格式错误'})
         if not value:
             issues_obj.attention.set(value)
             record_content = f'{field_obj.verbose_name}更新为空'
-        else:   # 关注者同assign一样必须是属于该项目的人
-            user_dict = {str(request.tracer.project.creator.id):request.tracer.project.creator.name}
+        else:  # 关注者同assign一样必须是属于该项目的人
+            user_dict = {str(request.tracer.project.creator.id): request.tracer.project.creator.name}
             participants_list = models.Participants.objects.filter(project_id=proj_id)
             for item in participants_list:
                 user_dict[str(item.user.id)] = item.user.name
 
             new_attention_name = []
             for user_id in value:
-                user_name = user_dict.get(str(user_id),'')
+                user_name = user_dict.get(str(user_id), '')
                 if not user_name:
                     # 必须全部都合理
                     return JsonResponse({'status': False, 'errors': '选择的值不存在'})
@@ -361,3 +349,39 @@ def issues_record(request, proj_id, issues_id):
         }
         return JsonResponse({'status': True, 'reply_obj': data})
     return JsonResponse({'status': False, 'errors': form.errors.get_json_data()})
+
+
+
+# 生成邀请码
+@csrf_exempt
+def invite_url(request,proj_id):
+    """
+    1. 校验前端表单中数据合法性
+    2. 判断创建邀请人的人是否为项目创建者
+    3. 若是，则生成邀请码保存在数据库中（即，此邀请码有效）
+    """
+    form = ProjectInviteModelForm(data=request.POST)
+    if form.is_valid():
+        if request.tracer.user != request.tracer.project.creator:
+            form.add_error('period','无权创建邀请码!')
+            return JsonResponse({'status':False,'errors':form.errors.get_json_data()})
+        invite_code = uid(request.tracer.user.phone)
+        form.instance.project = request.tracer.project
+        form.instance.creator = request.tracer.user
+        form.instance.code = invite_code
+        form.save()
+
+        # 邀请码url链接
+        url = f'{request.scheme}://{request.get_host()}{reverse('web:invite_join',kwargs={'code':invite_code})}'
+        return JsonResponse({'status':True,'url':url})
+    return JsonResponse({'status':False,'errors':form.errors.get_json_data()})
+
+
+
+
+
+
+# 访问邀请码链接地址
+def invite_join(request):
+    pass
+

@@ -210,11 +210,32 @@ class IssuesReply(models.Model):
         (1, '修改记录'),
         (2, '回复'),
     )
-    reply_type = models.SmallIntegerField(verbose_name='类型',choices=reply_type_choices)
-    issues = models.ForeignKey(verbose_name='所属问题',to=Issues,on_delete=models.CASCADE)
-    creator = models.ForeignKey(verbose_name='创建者',to=User,on_delete=models.CASCADE,related_name='creator_reply')
+    reply_type = models.SmallIntegerField(verbose_name='类型', choices=reply_type_choices)
+    issues = models.ForeignKey(verbose_name='所属问题', to=Issues, on_delete=models.CASCADE)
+    creator = models.ForeignKey(verbose_name='创建者', to=User, on_delete=models.CASCADE, related_name='creator_reply')
     content = models.TextField(verbose_name='描述')
-    create_datetime = models.DateTimeField(verbose_name='创建时间',auto_now=True)
+    create_datetime = models.DateTimeField(verbose_name='创建时间', auto_now=True)
 
-    parent = models.ForeignKey(verbose_name='父评论',to='self',on_delete=models.CASCADE,related_name='children',null=True,blank=True)
+    parent = models.ForeignKey(verbose_name='父评论', to='self', on_delete=models.CASCADE, related_name='children',
+                               null=True, blank=True)
+
+
+# 项目邀请码
+# 所属项目、创造者、邀请码、可使用次数、已使用次数、有效期、生成时间
+class ProjectInvite(models.Model):
+    project = models.ForeignKey(verbose_name='所属项目', to='Project', on_delete=models.CASCADE)
+    creator = models.ForeignKey(verbose_name='邀请码创建者', to='User', on_delete=models.CASCADE,
+                                related_name='creator_invite')
+    code = models.CharField(verbose_name='邀请码', max_length=64, unique=True)
+    count = models.PositiveIntegerField(verbose_name='最大使用次数', null=True, blank=True,
+                                        help_text='空表示无次数限制')
+    use_count = models.PositiveIntegerField(verbose_name='已使用的次数', default=0)
+    period_choices = (
+        (30, '30分钟'),
+        (60, '60分钟'),
+        (300, '5小时'),
+        (1440, '24小时'),
+    )
+    period = models.IntegerField(verbose_name='有效期',choices=period_choices,default=1440)
+    create_datetime = models.DateTimeField(verbose_name='创建时间',auto_now=True)
 
