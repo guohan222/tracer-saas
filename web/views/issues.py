@@ -18,9 +18,8 @@ class CheckFilter(object):
     3. request,用于查询当前查询参数，判断按钮是否进行高亮、预测url
 
     """
-    def __init__(self,field,name,data_list,request):
+    def __init__(self,field,data_list,request):
         self.field = field
-        self.title = name
         self.data_list = data_list
         self.request = request
 
@@ -68,11 +67,38 @@ class CheckFilter(object):
 
 
 
+class SelectFilter(object):
+    def __init__(self,field,data_list,request):
+        self.field = field
+        self.data_list = data_list
+        self.request = request
 
+    def __iter__(self):
+        for item in self.data_list:
+            key = str(item[0])
+            text = item[1]
+            st = ''
+            value_list = self.request.GET.getlist(self.field)
+            if key in value_list:
+                st = 'selected'
+                value_list.remove(key)
+            else:
+                value_list.append(key)
 
+            query_dict = self.request.GET.copy()
+            query_dict._mutable = True
+            query_dict.setlist(self.field,value_list)
 
+            if 'page' in query_dict:
+                query_dict.pop('page')
+            param_url = query_dict.urlencode()
+            if param_url:
+                url = f'{self.request.path_info}?{param_url}'
+            else:
+                url = f'{self.request.path_info}'
 
-
+            tpl = f'<option value={url} {st}>{text}</option>'
+            yield mark_safe(tpl)
 
 
 
@@ -85,7 +111,7 @@ class CheckFilter(object):
 
 # 展示&新建问题
 def issues(request, proj_id):
-    # # 如果用户进行筛选，url查询参数示例：?issues_type=1&status=2&status=3（同字段或，不同字段且）
+    # 如果用户进行筛选，url查询参数示例：?issues_type=1&status=2&status=3（同字段或，不同字段且）
     if request.method == "GET":
         # 首先定一个允许的查询字段列表，然后循环这个列表看url中有没有查询参数字段在这个列表中如果有则以这个字段名__in为键，getlist到的值为值，存储到condition字典里面
         print(f'issues中get请求:{request.GET}')
@@ -110,11 +136,20 @@ def issues(request, proj_id):
         )
         issues_obj_list = queryset[page_obj.start:page_obj.end]
 
+        issues_type_list = models.IssuesType.objects.filter(project_id=proj_id).values_list('id','title')
+        proj_user_list = [(request.tracer.project.creator.id,request.tracer.project.creator.name),]
+        proj_user_list.extend(models.Participants.objects.filter(project_id=proj_id).values_list('user_id','user__name'))
+
         content = {
             'issues_object_list': issues_obj_list,
             'page_html': page_obj.page_html(),
-            'status_filter':CheckFilter('status','状态',models.Issues.status_choices,request),
-            'priority_filter':CheckFilter('priority','优先级',models.Issues.priority_choices,request),
+            'filter_list':[
+                {'title':'状态','filter':CheckFilter('status',models.Issues.status_choices,request)},
+                {'title':'优先级','filter':CheckFilter('priority',models.Issues.priority_choices,request)},
+                {'title':'问题类型','filter':CheckFilter('issues_type',issues_type_list,request)},
+                {'title':'指派','filter':SelectFilter('assign',proj_user_list,request),'class_type':'select'},
+                {'title':'关注者','filter':SelectFilter('attention',proj_user_list,request),'class_type':'select'},
+            ],
             'form': form
         }
         return render(request, 'issues.html', content)

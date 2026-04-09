@@ -70,23 +70,28 @@
                     </div>
 
                     <div class="card-body">
-                        <div class="filter-row">
-                            <div class="filter-title">{{ status_filter.title }}</div>
-                            <div class="filter-options">
-                                {% for item in status_filter %}
-                                    {{ item }}
-                                {% endfor %}
-                            </div>
-                        </div>
 
-                        <div class="filter-row">
-                            <div class="filter-title">{{ priority_filter.title }}</div>
-                            <div class="filter-options">
-                                {% for item in priority_filter %}
-                                    {{ item }}
-                                {% endfor %}
+
+                        {% for item in filter_list %}
+                            <div class="filter-row">
+                                <div class="filter-title">{{ item.title }}</div>
+                                <div class="filter-options">
+                                    {% if item.class_type == 'select' %}
+                                        <select class="tom-select-multiple" multiple style="width: 250px;">
+                                            {% for opt in item.filter %}
+                                                {{ opt }}
+                                            {% endfor %}
+                                        </select>
+
+                                    {% else %}
+                                        {% for element in item.filter %}
+                                            {{ element }}
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
                             </div>
-                        </div>
+                        {% endfor %}
+
                     </div>
 
 
@@ -181,7 +186,6 @@
 
         </div>
     </div>
-
 
 
     <!-- 公用模态框 -->
@@ -318,10 +322,22 @@
 
             // 场景 B：多选 + 标签化管理 (带关闭按钮)
             document.querySelectorAll('.tom-select-multiple').forEach((el) => {
-                new TomSelect(el, {
+                let ts = new TomSelect(el, {
                     create: false,
                     placeholder: "请选择多项...",
                     plugins: ['remove_button'], // 核心插件：让选中的标签带有 x 删除按钮
+                });
+
+                // 监听“添加标签”动作
+                ts.on('item_add', function (value) {
+                    // 此时的 value，就是咱们后端生成的未来 URL！直接起飞！
+                    location.href = value;
+                });
+
+                // 监听“移除标签”动作
+                ts.on('item_remove', function (value) {
+                    // 取消选中时，同样拿着那个 URL 去刷新
+                    location.href = value;
                 });
             });
 
@@ -414,10 +430,19 @@
 
         // 监听被点击的checkbox
         filter_options.addEventListener('change', function (event) {
-            let ckElement = event.target
-            console.log(ckElement.parentElement.getAttribute('href'))
-            location.href = ckElement.parentElement.getAttribute('href')
-        })
+            let ckElement = event.target;
+
+            // 如果是 <select> 标签发出的改变，直接放行
+            if (ckElement.tagName === 'SELECT') {
+                return;
+            }
+
+            let aTag = ckElement.parentElement;
+            let targetUrl = aTag.getAttribute('href');
+            if (targetUrl) {
+                location.href = targetUrl;
+            }
+        });
 
         // 监听确定按钮
         confirm_button.addEventListener('click', async function () {
