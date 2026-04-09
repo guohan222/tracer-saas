@@ -343,6 +343,7 @@
         const filter_options = document.querySelector('.card-body')
         const newIssuesModal = document.getElementById('newIssuesModal')
         const modalTile = document.getElementById('newIssuesModalLabel')
+        const newInviteModal = document.querySelector('#newInviteModal')
 
         const confirm_button = document.getElementById('confirm_button')
         const create_Invite = document.querySelector('#create_Invite')
@@ -458,7 +459,7 @@
         });
 
 
-        // 监听模态框
+        // 监听新建问题模态框
         newIssuesModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget
             const act = button.getAttribute('data-act')
@@ -482,6 +483,11 @@
 
             }
         });
+
+        // 监听邀请模态框
+        newInviteModal.addEventListener('show.bs.modal',function (){
+            document.querySelectorAll('.err-msg').forEach(Box => Box.innerText = '');
+        })
 
         // 监听被点击的checkbox
         filter_options.addEventListener('change', function (event) {
@@ -549,7 +555,7 @@
                 }
             }
             create_Invite.innerText = originalText;
-            create_Invite.disabled = true; // 禁用按钮，变灰！防止狂点！
+            create_Invite.disabled = false; // 禁用按钮，变灰！防止狂点！
 
         })
 

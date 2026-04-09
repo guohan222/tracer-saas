@@ -1,3 +1,7 @@
+import datetime
+from datetime import timedelta
+from itertools import product
+
 from django.urls import reverse
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
@@ -382,6 +386,48 @@ def invite_url(request,proj_id):
 
 
 # 访问邀请码链接地址
-def invite_join(request):
-    pass
+def invite_join(request,code):
+    invite_obj = models.ProjectInvite.objects.filter(code=code).first()
+    # 邀请码是否存在
+    if not invite_obj:
+        return render(request, 'invite_join.html', {'errors': '邀请码不存在'})
+
+    # 邀请码是否已过期
+    current_datetime = datetime.datetime.now()
+    limit_datetime = invite_obj.create_datetime + timedelta(minutes=invite_obj.period)
+    if current_datetime > limit_datetime:
+        return render(request, 'invite_join.html', {'errors': '邀请码已过期'})
+
+    # 访问人是否是项目创建者
+    if request.tracer.user == invite_obj.project.creator:
+        return render(request, 'invite_join.html', {'errors': '创建者无需再加入项目'})
+
+    # 访问人是否是项目参与者
+    if models.Participants.objects.filter(project=invite_obj.project,user=request.tracer.user).exists():
+        return render(request, 'invite_join.html', {'errors': '已加入项目无需再加入'})
+
+    # 该项目人数是否超出订阅范围
+    product_obj = models.Subscribe.objects.filter(user=invite_obj.creator).first().product
+    if invite_obj.project.join_count+1 > product_obj.max_member:
+        return render(request, 'invite_join.html', {'errors': '项目成员超限'})
+
+    # 邀请码能够使用的次数是否用完
+    if invite_obj.count:
+        if invite_obj.use_count >= invite_obj.count:
+            return render(request, 'invite_join.html', {'errors': '邀请码次数已使用完'})
+
+    invite_obj.use_count += 1
+    invite_obj.save()
+    invite_obj.project.join_count += 1
+    invite_obj.project.save()
+    models.Participants.objects.create(project=invite_obj.project,user=request.tracer.user)
+    return render(request,'invite_join.html',{'project':invite_obj.project})
+
+
+
+
+
+
+
+
 

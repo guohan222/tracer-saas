@@ -53,6 +53,6 @@ urlpatterns = [
 
                                    ], None, None)),
 
-path('inviter/join/<str:code>', issues.invite_join, name='invite_join'),
+path('invite/join/<str:code>', issues.invite_join, name='invite_join'),
 
 ]

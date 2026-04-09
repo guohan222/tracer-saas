@@ -26,9 +26,9 @@ def project_list(request):
         join_list = models.Participants.objects.filter(user=request.tracer.user)
         for item in join_list:
             if item.star:
-                project_dict['star'].append({'type':'my','proj':item.project})
+                project_dict['star'].append({'type':'join','proj':item.project})
             else:
-                project_dict['my'].append(item.project)
+                project_dict['join'].append(item.project)
 
         return render(request,'project_list.html',{'form':form,'project_dict':project_dict})
 
