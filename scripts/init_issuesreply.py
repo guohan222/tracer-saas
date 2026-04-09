@@ -13,7 +13,10 @@ from web import models
 #     parent_id='2'
 # )
 
-a = models.Issues.objects.values('status')
-b = models.Issues.objects.values('status').annotate(ct=Count('id'))
+# a = models.Issues.objects.values('status')
+# b = models.Issues.objects.values('status').annotate(ct=Count('id'))
+# print(a)
+# print(b)
+
+a = models.Issues.objects.filter(project_id=23).values('status').annotate(ct=Count('id'))
 print(a)
-print(b)

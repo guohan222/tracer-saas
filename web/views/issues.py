@@ -214,12 +214,12 @@ def issues_detail(request, proj_id, issues_id):
                 return JsonResponse({'status': False, 'errors': '值不能为空！'})
             # 否则允许为空，进行更新保存
             setattr(issues_obj, field, None)
-            issues_obj.save(update_fields=[field, ])
+            issues_obj.save()
             record_content = f'{field_obj.verbose_name}更新为空'
         else:
             print(value)
             setattr(issues_obj, field, value)
-            issues_obj.save(update_fields=[field, ])
+            issues_obj.save()
             record_content = f'更新了问题描述' if field == 'desc' else f'{field_obj.verbose_name}更新为:{value}'
 
         data = create_reply_record(record_content)
@@ -233,7 +233,7 @@ def issues_detail(request, proj_id, issues_id):
             if not field_obj.null:
                 return JsonResponse({'status': False, 'errors': '值不能为空！'})
             setattr(issues_obj, field, None)
-            issues_obj.save(update_fields=[field])
+            issues_obj.save()
             record_content = f'{field_obj.verbose_name}更新为空'
 
         else:  # 不为空则检测FK字段有没有其他要求，比如assign只能为该项目中的参与者或者创建者
@@ -252,7 +252,7 @@ def issues_detail(request, proj_id, issues_id):
 
                 # 上面通过则代表操作者正常执行，assign字段待更新的值的合法的
                 setattr(issues_obj, field, instance)
-                issues_obj.save(update_fields=[field])
+                issues_obj.save()
                 record_content = f'{field_obj.verbose_name}更新为:{str(instance)}'
 
             else:  # 检测其他FK字段根据value查找，是否真实存在且合法
@@ -264,7 +264,7 @@ def issues_detail(request, proj_id, issues_id):
                 if not instance:
                     return JsonResponse({'status': False, 'errors': '选择的值不存在'})
                 setattr(issues_obj, field, instance)
-                issues_obj.save(update_fields=[field])
+                issues_obj.save()
                 record_content = f'{field_obj.verbose_name}更新为:{str(instance)}'
 
         data = create_reply_record(record_content)
@@ -279,7 +279,7 @@ def issues_detail(request, proj_id, issues_id):
         if not select_text:
             return JsonResponse({'status': False, 'errors': '选择的值不存在'})
         setattr(issues_obj, field, value)
-        issues_obj.save(update_fields=[field])
+        issues_obj.save()
         record_content = f'{field_obj.verbose_name}更新为:{select_text}'
         data = create_reply_record(record_content)
         return JsonResponse({'status': True, 'reply_obj': data})
@@ -294,6 +294,7 @@ def issues_detail(request, proj_id, issues_id):
             return JsonResponse({'status': False, 'error': '数据格式错误'})
         if not value:
             issues_obj.attention.set(value)
+            issues_obj.save(update_fields=['latest_update_datetime'])       # 更新时间
             record_content = f'{field_obj.verbose_name}更新为空'
         else:  # 关注者同assign一样必须是属于该项目的人
             user_dict = {str(request.tracer.project.creator.id): request.tracer.project.creator.name}
@@ -310,6 +311,7 @@ def issues_detail(request, proj_id, issues_id):
                 new_attention_name.append(user_name)
 
             issues_obj.attention.set(value)
+            issues_obj.save(update_fields=['latest_update_datetime'])  # 更新时间
             record_content = f'{field_obj.verbose_name}更新为:{new_attention_name}'
         data = create_reply_record(record_content)
         return JsonResponse({'status': True, 'reply_obj': data})

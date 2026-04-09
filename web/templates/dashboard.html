@@ -1,1 +1,195 @@
 {% extends 'layout/manage.html' %}
+{% load issues %}
+{% load dashboard %}
+
+
+{% block css %}
+    <style>
+        /* 给面板加一点淡淡的阴影，质感拉满 */
+        .dashboard-card {
+            border-radius: 6px;
+            border: 1px solid #eef0f3;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+            margin-bottom: 20px;
+        }
+
+        .dashboard-card .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #eef0f3;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* 头像占位符样式 */
+        .avatar-circle {
+            width: 35px;
+            height: 35px;
+            background-color: #31587d;
+            color: white;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid mt-4">
+        <div class="row">
+
+            <div class="col-md-8">
+
+                <!--趋势-->
+                <div class="card dashboard-card">
+
+                    <div class="card-header">
+                        <i class="fa-solid fa-chart-line me-2"></i>新增问题趋势
+                    </div>
+                    <div class="card-body">
+                        <div id="issueChart" style="width: 100%; height: 280px;"></div>
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <!--问题-->
+                    <div class="col-md-6">
+
+                        <div class="card dashboard-card">
+                            <div class="card-header">
+                                <i class="fa-solid fa-magnifying-glass me-2"></i>问题
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center mt-2">
+                                    {% for key, value in issues_dict.items %}
+                                        <div class="col-4 mb-4">
+                                            <a href="{% url 'web:issues' proj_id=request.tracer.project.id %}?status={{ key }}"
+                                               class="text-decoration-none d-block">
+                                                <h4 class="text-primary fw-normal">{{ value.ct }}</h4>
+                                                <small class="text-muted">{{ value.text }}</small>
+                                            </a>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!--成员-->
+                    <div class="col-md-6">
+
+                        <div class="card dashboard-card">
+                            <div class="card-header">
+                                <i class="fa-solid fa-user me-2"></i>项目成员
+                            </div>
+                            <div class="card-body">
+                                {% for item in total_user %}
+                                    {% if item.0 == request.tracer.project.creator.id %}
+                                        <div class="mb-3">
+                                            <span class="text-muted d-block mb-2">创建者</span>
+                                            <div class="d-flex align-items-center mb-2">
+                                                <div class="avatar-circle me-2"
+                                                     style="background-color: #28a745;">{{ item.1.0|upper }}</div>
+                                                <span>{{ item.1 }}</span></div>
+                                        </div>
+                                    {% else %}
+                                        <div>
+                                            <span class="text-muted d-block mb-2">参与者</span>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle me-2">{{ item.1.0|upper }}
+                                                </div>
+                                                <span>{{ item.1 }}</span>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <!--详细-->
+                <div class="card dashboard-card">
+
+                    <div class="card-header">
+                        <i class="fa-solid fa-gear me-2"></i>详细
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless table-sm mb-0">
+                            <tbody>
+                            <tr>
+                                <td class="text-muted" style="width: 100px;">项目名称：</td>
+                                <td>{{ request.tracer.project.name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">项目描述：</td>
+                                <td>
+                                    {% if request.tracer.project.describe %}
+                                        {{ request.tracer.project.desc }}
+                                    {% else %}
+                                        null
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">创建时间：</td>
+                                <td>{{ request.tracer.project.create_datetime|date:"Y年m月d日 H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">项目空间：</td>
+                                <td>{% use_storage request.tracer.project.used_storage %} / {{ request.tracer.product.max_storage }} GB</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+                <!--动态-->
+                <div class="card dashboard-card">
+
+                    <div class="card-header">
+                        <i class="fa-solid fa-list-ul me-2"></i>动态
+                    </div>
+                    <div class="card-body">
+                        {% for item in issues_updates %}
+                            <div class="d-flex mb-3">
+                                <div class="avatar-circle me-3"
+                                     style="width: 40px; height: 40px; font-size: 16px;">{{ item.creator.name.0|upper }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold">{{ item.creator.name }}</span>
+                                        <small class="text-muted">{{ item.create_datetime|date:"Y-m-d H:i" }}更新</small>
+                                    </div>
+                                    <div class="text-muted mt-1" style="font-size: 14px;">
+                                        <a
+                                                href="{% url 'web:issues_detail' proj_id=request.tracer.project.id issues_id=item.issues.id %}"
+                                                class="text-decoration-none">{% string_just item.issues.id %}</a>
+                                        {{ item.content }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+{% endblock %}

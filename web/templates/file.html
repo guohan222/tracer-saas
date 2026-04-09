@@ -1,6 +1,6 @@
 {% extends 'layout/manage.html' %}
 {% load static %}
-
+{% load dashboard %}
 
 {% block content %}
     <div class="container-fluid mt-4">
@@ -80,7 +80,7 @@
                                     {% if item.file_type == 2 %}
                                         -
                                     {% else %}
-                                        {{ item.file_size }}
+                                        {% use_storage item.file_size %}
                                     {% endif %}
                                 </td>
                                 <td>{{ item.update_user.name }}</td>
