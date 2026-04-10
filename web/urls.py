@@ -34,6 +34,7 @@ urlpatterns = [
 
                                        path('statistics/', statistics.statistics, name='statistics'),
                                        path('statistics/priority/', statistics.statistics_priority, name='statistics_priority'),
+                                       path('statistics/user/', statistics.statistics_user, name='statistics_user'),
 
                                        # file
                                        path('file/', file.file, name='file'),

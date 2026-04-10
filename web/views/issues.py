@@ -392,28 +392,46 @@ def invite_url(request,proj_id):
 # 访问邀请码链接地址
 def invite_join(request,code):
     invite_obj = models.ProjectInvite.objects.filter(code=code).first()
+    current_datetime = datetime.datetime.now()
     # 邀请码是否存在
     if not invite_obj:
         return render(request, 'invite_join.html', {'errors': '邀请码不存在'})
 
+
     # 邀请码是否已过期
-    current_datetime = datetime.datetime.now()
     limit_datetime = invite_obj.create_datetime + timedelta(minutes=invite_obj.period)
     if current_datetime > limit_datetime:
         return render(request, 'invite_join.html', {'errors': '邀请码已过期'})
+
 
     # 访问人是否是项目创建者
     if request.tracer.user == invite_obj.project.creator:
         return render(request, 'invite_join.html', {'errors': '创建者无需再加入项目'})
 
+
     # 访问人是否是项目参与者
     if models.Participants.objects.filter(project=invite_obj.project,user=request.tracer.user).exists():
         return render(request, 'invite_join.html', {'errors': '已加入项目无需再加入'})
 
-    # 该项目人数是否超出订阅范围     （有bug）
-    product_obj = models.Subscribe.objects.filter(user=invite_obj.creator).first().product
-    if invite_obj.project.join_count+1 > product_obj.max_member:
+
+    # 根据该项目订阅信息判断：该项目人数是否超出订阅范围
+        # 找出用户在订阅表中最近一次的记录
+    max_subscribe = models.Subscribe.objects.filter(user=invite_obj.project.creator).order_by('-id').first()    # 最大id的订阅信息
+    if max_subscribe.product.category == 1:
+        max_member = max_subscribe.product.max_member
+    else:
+        # 当不是免费版，醉经一次的订阅过期时
+        if max_subscribe.end_time < current_datetime:
+            free_obj = models.Product.objects.filter(category=1).first()
+            max_member = free_obj.max_member
+        else:
+            max_member = max_subscribe.product.max_member
+        # 当前项目的所有成员（创建者&参与者）
+    current_member = models.Participants.objects.filter(project=invite_obj.project).count()
+    current_member += 1
+    if current_member >= max_member:
         return render(request, 'invite_join.html', {'errors': '项目成员超限'})
+
 
     # 邀请码能够使用的次数是否用完
     if invite_obj.count:

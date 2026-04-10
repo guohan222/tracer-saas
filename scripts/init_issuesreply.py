@@ -18,5 +18,8 @@ from web import models
 # print(a)
 # print(b)
 
-a = models.Issues.objects.filter(project_id=23).values('status').annotate(ct=Count('id'))
-print(a)
+# a = models.Issues.objects.filter(project_id=23).values('status').annotate(ct=Count('id'))
+# print(a)
+
+res = models.Issues.objects.filter(project_id=23).values('assign__name','status').annotate(ct=Count('id'))
+print(res)

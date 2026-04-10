@@ -55,10 +55,11 @@
         let projectChart, priorityChart;
 
         let priorityUrl = '{% url 'web:statistics_priority' proj_id=request.tracer.project.id %}'
+        let userUrl = '{% url 'web:statistics_user' proj_id=request.tracer.project.id %}'
 
         document.addEventListener('DOMContentLoaded', function () {
             initDatePicker()
-            // initProjectChart()
+            initProjectChart()
             initPriorityChart()
         })
 
@@ -78,18 +79,20 @@
             });
         }
 
-        /*
+
         // 2. 初始化左侧：人员进度柱状堆叠图
         function initProjectChart() {
             projectChart = Highcharts.chart('projectChart', {
                 chart: {type: 'column'}, // 柱状图
                 title: {text: null},
                 credits: {enabled: false},
+
                 xAxis: {categories: []}, // 预留给人员名字: ['武沛齐', '未指派']
                 yAxis: {
                     title: {text: '问题数量'},
                     allowDecimals: false
                 },
+
                 plotOptions: {
                     column: {
                         stacking: 'normal' // 开启堆叠效果 (核心配置)
@@ -98,7 +101,7 @@
                 series: [] // 预留给后端数据: [{name: '新建', data: [1, 2]}, {name: '处理中', data: [0, 1]}]
             });
         }
-         */
+
 
         // 3. 初始化右侧：优先级饼图
         function initPriorityChart() {
@@ -124,20 +127,36 @@
 
         // 4. 前后端通信中心
         async function fetchData(start = "", end = "") {
-            // 这里拼接请求参数，发给 Django 视图
-            let url = `${priorityUrl}?start=${start}&end=${end}`;
+            let url1 = `${priorityUrl}?start=${start}&end=${end}`;
+            let url2 = `${userUrl}?start=${start}&end=${end}`;
 
-            console.log('准备')
-            // TODO: 发送 Fetch 请求
-            let res = await fetch(url);
-            let data = await res.json()
-            console.log(data)
-            if (data.status){
-                priorityChart.series[0].setData(data.priority_data)
-            }
+            // 使用 Promise.all 发起：并发请求
+            let [res_priority, res_user] = await Promise.all([
+                fetch(url1),
+                fetch(url2),
+            ])
+
+            // 同时解析
+            let data_priority = await res_priority.json()
+            let data_user = await res_user.json()
 
 
             // 更新 projectChart 和 priorityChart 的数据
+            if (data_priority.status) {
+                priorityChart.series[0].setData(data_priority.priority_data)
+            }
+
+            // 更新柱状图 (究极优雅版)
+            if (data_user.status) {
+                projectChart.update({
+                    xAxis: {categories: data_user.categories},
+                    series: data_user.series
+                }, true, true);
+                // 解释：最后这个 true 是核心，学名叫 oneToOne (一对一映射)。
+                // 它会自动对比新旧数据，帮你把多余的柱子全清掉，缺少的柱子补上，还自带极其丝滑的动画！
+            }
+
+
         }
 
 
