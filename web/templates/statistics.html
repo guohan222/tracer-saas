@@ -1,1 +1,58 @@
-{% extends 'layout/manage.html' %}
+{% extends 'layout/manage.html' %} {% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'plugin/flatpickr/flatpickr.min.css' %}">
+    <style>
+        /* 稍微美化一下日期输入框 */
+        .date-picker-wrap {
+            margin-bottom: 20px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid" style="margin-top: 20px;">
+
+        <div class="row date-picker-wrap">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text">日期范围</span>
+                    <input type="text" id="dateRange" class="form-control" placeholder="请选择日期范围...">
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header"><i class="fa fa-bar-chart"></i> 人员工作进度</div>
+                    <div class="card-body">
+                        <div id="projectChart" style="width: 100%; height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header"><i class="fa fa-pie-chart"></i> 优先级统计</div>
+                    <div class="card-body">
+                        <div id="priorityChart" style="width: 100%; height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
+
+
+{% block js %}
+    <script src="{% static 'plugin/flatpickr/flatpickr.min.js' %}"></script>
+    <script src="{% static 'plugin/flatpickr/l10n/zh.js' %}"></script>
+    <script>
+
+
+
+    </script>
+
+{% endblock %}

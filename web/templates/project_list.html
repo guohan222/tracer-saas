@@ -7,6 +7,7 @@
 
 {% block css %}
     <style>
+        /* 原有的单选框样式保留 */
         .color-radio label {
             margin-left: 0;
             padding-left: 0;
@@ -27,166 +28,234 @@
         .color-radio input[type="radio"]:checked + .cycle {
             border: 2px solid black;
         }
+
+        /* --- 新增的 SaaS 化美化样式 --- */
+        body {
+            background-color: #f8f9fa; /* 给整个页面一个极其微弱的灰底，衬托白色卡片 */
+        }
+
+        .err-msg {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        /* 现代化的卡片设计 */
+        .project-card {
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            background-color: #ffffff;
+        }
+
+        /* 悬浮时的抬升和阴影加深效果 */
+        .project-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 底部“点击进入”按钮的悬浮互动 */
+        .card-enter-link {
+            transition: all 0.3s ease;
+            color: #6c757d; /* 默认灰色，不抢视觉 */
+        }
+
+        .project-card:hover .card-enter-link {
+            color: #0d6efd; /* 鼠标移入卡片时亮起为主题蓝 */
+            transform: translateX(4px); /* 箭头有一个向右的小位移暗示 */
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #343a40;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #edf2f7;
+        }
     </style>
 {% endblock %}
+
 {% block content %}
-    <div class="container mt-4">
-        <button
-                class="btn btn-outline-primary rounded-lg px-4 py-2 d-flex align-items-center gap-2"
-                data-bs-toggle="modal"
-                data-bs-target="#newProjectModal"
-                style="border-width: 2px; font-weight: 500;"
-        >
-            <i class="fa-solid fa-plus"></i>
-            新建项目
-        </button>
+    <div class="container mt-4 mb-5">
 
-        <!-- 星标项目 -->
-        <div class="container px-4 py-5" id="featured-3">
-            <h2 class="pb-2 border-bottom">星标项目</h2>
-            <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
-                {% for project in project_dict.star %}          {# project : {'type':'my','proj':item} #}
-                    <div class="col">
-                        <div class="card h-100 shadow-sm border-light bg-white project-card-hover">
-                            <div class="card-body d-flex flex-column p-4"
-                                 style="background-color: {{ project.proj.get_color_display }};">
-                                <h5 class="card-title text-dark fw-bold mb-3">{{ project.proj.name }}</h5>
-                                {% if project.proj.describe %}
-                                    <p class="card-text text-muted mb-4 fs-7 flex-grow-1">{{ project.proj.describe }}</p>
-                                {% else %}
-                                    <div class="flex-grow-1"></div>
-                                {% endif %}
-                                <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                                    <div class="star-icon">
-                                        <a href="{% url 'web:project_unstar' proj_type=project.type proj_id=project.proj.id %}">
-                                            <i class="fas fa-star text-warning"
-                                               style="cursor: pointer; font-size: 1.1rem;"></i> </a>
+        <div class="d-flex justify-content-between align-items-center mb-4 pt-3">
+            <h3 class="fw-bold m-0" style="letter-spacing: 1px;">项目中心</h3>
+            <button
+                    class="btn btn-primary rounded-pill px-4 shadow-sm d-flex align-items-center gap-2"
+                    data-bs-toggle="modal"
+                    data-bs-target="#newProjectModal"
+                    style="font-weight: 500;"
+            >
+                <i class="fa-solid fa-plus"></i> 新建项目
+            </button>
+        </div>
+
+        {% if project_dict.star %}
+            <div class="mb-5">
+                <div class="section-title">
+                    <i class="fas fa-star text-warning me-2"></i>星标项目
+                </div>
+                <div class="row g-4 row-cols-1 row-cols-md-2 row-cols-lg-3">
+                    {% for project in project_dict.star %}
+                        <div class="col">
+                            <div class="card h-100 project-card"
+                                 style="border-top: 5px solid {{ project.proj.get_color_display }};">
+                                <div class="card-body d-flex flex-column p-4">
+                                    <h5 class="card-title text-dark fw-bold mb-2">{{ project.proj.name }}</h5>
+                                    <p class="card-text text-muted mb-4 flex-grow-1"
+                                       style="font-size: 14px; line-height: 1.6;">
+                                        {% if project.proj.describe %}
+                                            {{ project.proj.describe }}
+                                        {% else %}
+                                            <span class="text-black-50 fst-italic">暂无项目描述</span>
+                                        {% endif %}
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <a href="{% url 'web:project_unstar' proj_type=project.type proj_id=project.proj.id %}"
+                                               title="取消星标">
+                                                <i class="fas fa-star text-warning"
+                                                   style="font-size: 1.2rem; transition: transform 0.2s;"></i>
+                                            </a>
+                                            <div class="text-muted" style="font-size: 13px;" title="参与人数">
+                                                <i class="far fa-user me-1"></i> {{ project.proj.join_count }}
+                                            </div>
+                                        </div>
+                                        <a href="{% url 'web:dashboard' project.proj.id %}"
+                                           class="card-enter-link fw-bold text-decoration-none"
+                                           style="font-size: 14px;">
+                                            进入项目 <i class="fas fa-arrow-right ms-1"></i>
+                                        </a>
                                     </div>
-                                    <div class="star-icon">
-                                        <i class="far fa-user" aria-hidden="true"></i>
-                                        <span>{{ project.proj.join_count }}</span>
-                                    </div>
-                                    <a href="{% url 'web:dashboard' project.proj.id %}"
-                                       class="text-primary fw-bold text-decoration-none fs-7">
-                                        点击进入 <i class="fas fa-arrow-right ms-1"></i>
-                                    </a>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
-        </div>
+        {% endif %}
 
-        <!-- 创建的项目 -->
-        <div class="container px-4 py-5" id="featured-3">
-            <h2 class="pb-2 border-bottom">我创建的项目</h2>
-            <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
-                {% for project in project_dict.my %}
-                    <div class="col">
-                        <div class="card h-100 shadow-sm border-light bg-white project-card-hover">
-                            <div class="card-body d-flex flex-column p-4"
-                                 style="background-color: {{ project.get_color_display }};">
-                                <h5 class="card-title text-dark fw-bold mb-3">{{ project.name }}</h5>
-                                {% if project.describe %}
-                                    <p class="card-text text-muted mb-4 fs-7 flex-grow-1">{{ project.describe }}</p>
-                                {% else %}
-                                    <div class="flex-grow-1"></div>
-                                {% endif %}
-                                <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                                    <div class="star-icon">
-                                        <a href="{% url 'web:project_star' proj_type='my' proj_id=project.id %}"> <i
-                                                class="far fa-star text-warning"
-                                                style="cursor: pointer; font-size: 1.1rem;"></i> </a>
+        {% if project_dict.my %}
+            <div class="mb-5">
+                <div class="section-title">
+                    <i class="fas fa-folder-open text-primary me-2"></i>我创建的项目
+                </div>
+                <div class="row g-4 row-cols-1 row-cols-md-2 row-cols-lg-3">
+                    {% for project in project_dict.my %}
+                        <div class="col">
+                            <div class="card h-100 project-card"
+                                 style="border-top: 5px solid {{ project.get_color_display }};">
+                                <div class="card-body d-flex flex-column p-4">
+                                    <h5 class="card-title text-dark fw-bold mb-2">{{ project.name }}</h5>
+                                    <p class="card-text text-muted mb-4 flex-grow-1"
+                                       style="font-size: 14px; line-height: 1.6;">
+                                        {% if project.describe %}
+                                            {{ project.describe }}
+                                        {% else %}
+                                            <span class="text-black-50 fst-italic">暂无项目描述</span>
+                                        {% endif %}
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <a href="{% url 'web:project_star' proj_type='my' proj_id=project.id %}"
+                                               title="设为星标">
+                                                <i class="far fa-star text-muted" style="font-size: 1.2rem;"></i>
+                                            </a>
+                                            <div class="text-muted" style="font-size: 13px;" title="参与人数">
+                                                <i class="far fa-user me-1"></i> {{ project.join_count }}
+                                            </div>
+                                        </div>
+                                        <a href="{% url 'web:dashboard' project.id %}"
+                                           class="card-enter-link fw-bold text-decoration-none"
+                                           style="font-size: 14px;">
+                                            进入项目 <i class="fas fa-arrow-right ms-1"></i>
+                                        </a>
                                     </div>
-                                    <div class="star-icon">
-                                        <i class="far fa-user" aria-hidden="true"></i>
-                                        <span>{{ project.join_count }}</span>
-                                    </div>
-                                    <a href="{% url 'web:dashboard' project.id %}"
-                                       class="text-primary fw-bold text-decoration-none fs-7">
-                                        点击进入 <i class="fas fa-arrow-right ms-1"></i>
-                                    </a>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
-        </div>
+        {% endif %}
 
-        <!-- 参加的项目 -->
-        <div class="container px-4 py-5" id="featured-3">
-            <h2 class="pb-2 border-bottom">我参加的项目</h2>
-            <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
-                {% for project in project_dict.join %}
-                    <div class="col">
-                        <div class="card h-100 shadow-sm border-light bg-white project-card-hover">
-                            <div class="card-body d-flex flex-column p-4"
-                                 style="background-color: {{ project.get_color_display }};">
-                                <h5 class="card-title text-dark fw-bold mb-3">{{ project.name }}</h5>
-                                {% if project.describe %}
-                                    <p class="card-text text-muted mb-4 fs-7 flex-grow-1">{{ project.describe }}</p>
-                                {% else %}
-                                    <div class="flex-grow-1"></div>
-                                {% endif %}
-                                <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
-                                    <div class="star-icon">
-                                        <a href="{% url 'web:project_star' proj_type='join' proj_id=project.id %}"> <i
-                                                class="far fa-star text-warning"
-                                                style="cursor: pointer; font-size: 1.1rem;"></i> </a>
+        {% if project_dict.join %}
+            <div class="mb-5">
+                <div class="section-title">
+                    <i class="fas fa-users text-success me-2"></i>我参加的项目
+                </div>
+                <div class="row g-4 row-cols-1 row-cols-md-2 row-cols-lg-3">
+                    {% for project in project_dict.join %}
+                        <div class="col">
+                            <div class="card h-100 project-card"
+                                 style="border-top: 5px solid {{ project.get_color_display }};">
+                                <div class="card-body d-flex flex-column p-4">
+                                    <h5 class="card-title text-dark fw-bold mb-2">{{ project.name }}</h5>
+                                    <p class="card-text text-muted mb-4 flex-grow-1"
+                                       style="font-size: 14px; line-height: 1.6;">
+                                        {% if project.describe %}
+                                            {{ project.describe }}
+                                        {% else %}
+                                            <span class="text-black-50 fst-italic">暂无项目描述</span>
+                                        {% endif %}
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <a href="{% url 'web:project_star' proj_type='join' proj_id=project.id %}"
+                                               title="设为星标">
+                                                <i class="far fa-star text-muted" style="font-size: 1.2rem;"></i>
+                                            </a>
+                                            <div class="text-muted" style="font-size: 13px;" title="参与人数">
+                                                <i class="far fa-user me-1"></i> {{ project.join_count }}
+                                            </div>
+                                        </div>
+                                        <a href="{% url 'web:dashboard' project.id %}"
+                                           class="card-enter-link fw-bold text-decoration-none"
+                                           style="font-size: 14px;">
+                                            进入项目 <i class="fas fa-arrow-right ms-1"></i>
+                                        </a>
                                     </div>
-                                    <div class="star-icon">
-                                        <i class="far fa-user" aria-hidden="true"></i>
-                                        <span>{{ project.join_count }}</span>
-                                    </div>
-                                    <a href="{% url 'web:dashboard' project.id %}"
-                                       class="text-primary fw-bold text-decoration-none fs-7">
-                                        点击进入 <i class="fas fa-arrow-right ms-1"></i>
-                                    </a>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
-        </div>
+        {% endif %}
 
     </div>
 
-    <!-- 新建项目模态框 -->
     <div class="modal fade" id="newProjectModal" tabindex="-1" aria-labelledby="newProjectModalLabel"
          aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="newProjectModalLabel">新建项目</h5>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold" id="newProjectModalLabel">新建项目</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <!-- 这里预留表单位置，你后续可以自己添加 -->
+                <div class="modal-body p-4">
                     <form action="" method="post" id="proj_form">
                         {% csrf_token %}
                         {% for field in form %}
-                            <div class="mb-3">
-                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            <div class="mb-4">
+                                <label for="{{ field.id_for_label }}" class="form-label text-muted fw-bold"
+                                       style="font-size: 14px;">{{ field.label }}</label>
                                 {{ field }}
-                                <!-- 普通输入框下方错误信息块 -->
                                 <span class='err-msg'></span>
                             </div>
                         {% endfor %}
                     </form>
-
-
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" id="add_proj">创建项目</button>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary px-4" id="add_proj">创建项目</button>
                 </div>
             </div>
         </div>
     </div>
-
 {% endblock %}
 
 {% block js %}

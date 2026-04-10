@@ -210,6 +210,7 @@ class IssuesReply(models.Model):
         (1, '修改记录'),
         (2, '回复'),
     )
+    project = models.ForeignKey(verbose_name='项目',to='Project',related_name='issues_reply',on_delete=models.CASCADE)
     reply_type = models.SmallIntegerField(verbose_name='类型', choices=reply_type_choices)
     issues = models.ForeignKey(verbose_name='所属问题', to=Issues, on_delete=models.CASCADE)
     creator = models.ForeignKey(verbose_name='创建者', to=User, on_delete=models.CASCADE, related_name='creator_reply')

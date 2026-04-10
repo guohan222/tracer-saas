@@ -1,4 +1,5 @@
 {% extends 'layout/manage.html' %}
+{% load static %}
 {% load issues %}
 {% load dashboard %}
 
@@ -150,7 +151,9 @@
                             </tr>
                             <tr>
                                 <td class="text-muted">项目空间：</td>
-                                <td>{% use_storage request.tracer.project.used_storage %} / {{ request.tracer.product.max_storage }} GB</td>
+                                <td>{% use_storage request.tracer.project.used_storage %}
+                                    / {{ request.tracer.product.max_storage }} GB
+                                </td>
                             </tr>
                             </tbody>
                         </table>
@@ -192,4 +195,70 @@
 
         </div>
     </div>
+{% endblock %}
+
+
+
+{% block js %}
+    <script src="{% static 'plugin/highcharts/highcharts.js' %}"></script>
+    <script>
+        let issuesChart = '{% url 'web:issues_chart' proj_id=request.tracer.project.id %}'
+
+        let config = {
+            // 1. 头部：只保留关掉版权和图表标题
+            title: {text: null},
+            credits: {enabled: false},
+
+            // 2. 关掉图例：只有一条线，不需要说明
+            legend: {enabled: false},
+
+            // 3. X轴：留空，等后端传日期数组进来
+            xAxis: {
+                categories: [], // 👈 关键：这里预留给后端的 x_axis (例如 ['04-01', '04-02'])
+                labels: {
+                    formatter: function () {
+                        // this.value 就是后端传来的 '2026-04-06'
+                        // substring(5) 意思是：砍掉前5个字符（'2026-'），只显示 '04-06'
+                        return this.value.substring(5);
+                    }
+                }
+            },
+
+            // 4. Y轴：极简处理
+            yAxis: {
+                title: {text: '问题数量'}, // 如果你觉得左边写“问题数量”太挤，可以直接 null 隐藏
+                allowDecimals: false   // 👈 关键细节：Bug 数量不能有小数（不能出现 1.5 个 Bug）！
+            },
+
+            // 5. 提示框：增加高级感
+            tooltip: {
+                shared: true,
+                crosshairs: true // 👈 鼠标放上去会有一条垂直的辅助线
+            },
+
+            // 6. 数据列：留空，等后端传数量数组进来
+            series: [{
+                name: '新增问题',
+                color: '#0d6efd', // 配合咱们的 Bootstrap 蓝色主题
+                data: []          // 👈 关键：这里预留给后端的 y_axis (例如 [1, 0, 5])
+            }]
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initChart()
+        })
+
+        async function initChart() {
+            let res = await fetch(issuesChart)
+            let data = await res.json()
+            if (data.status) {
+                config.xAxis.categories = data.date
+                config.series[0].data = data.count
+                Highcharts.chart('issueChart', config);
+            }
+
+        }
+
+    </script>
 {% endblock %}

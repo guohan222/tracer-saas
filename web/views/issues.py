@@ -172,6 +172,7 @@ def issues_detail(request, proj_id, issues_id):
         # 创建一条操作评论
         reply_obj = models.IssuesReply.objects.create(
             reply_type=1,
+            project_id=proj_id,
             issues_id=issues_id,
             creator_id=request.tracer.user.id,
             content=content
@@ -324,7 +325,7 @@ def issues_detail(request, proj_id, issues_id):
 def issues_record(request, proj_id, issues_id):
     if request.method == "GET":
         # 按时间正序排,防止子评论早出现找不到父评论
-        reply_objs = models.IssuesReply.objects.filter(issues_id=issues_id).order_by('create_datetime')
+        reply_objs = models.IssuesReply.objects.filter(issues_id=issues_id,project_id=proj_id).order_by('create_datetime')
         reply_obj_list = []
         for row in reply_objs:
             data = {
@@ -341,6 +342,7 @@ def issues_record(request, proj_id, issues_id):
     # 新建评论
     form = IssuesReplyModelForm(data=request.POST)
     if form.is_valid():
+        form.instance.project_id = proj_id
         form.instance.reply_type = 2
         form.instance.issues_id = issues_id
         form.instance.creator_id = request.tracer.user.id
@@ -408,7 +410,7 @@ def invite_join(request,code):
     if models.Participants.objects.filter(project=invite_obj.project,user=request.tracer.user).exists():
         return render(request, 'invite_join.html', {'errors': '已加入项目无需再加入'})
 
-    # 该项目人数是否超出订阅范围
+    # 该项目人数是否超出订阅范围     （有bug）
     product_obj = models.Subscribe.objects.filter(user=invite_obj.creator).first().product
     if invite_obj.project.join_count+1 > product_obj.max_member:
         return render(request, 'invite_join.html', {'errors': '项目成员超限'})

@@ -70,10 +70,8 @@
                     </div>
 
                     <div class="card-body">
-
-
                         {% for item in filter_list %}
-                            <div class="filter-row">
+                            <div class="filter-row d-flex mb-3">
                                 <div class="filter-title">{{ item.title }}</div>
                                 <div class="filter-options">
                                     {% if item.class_type == 'select' %}
@@ -93,7 +91,6 @@
                         {% endfor %}
 
                     </div>
-
 
                 </div>
             </div>
