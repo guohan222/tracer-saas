@@ -33,6 +33,7 @@ urlpatterns = [
                                        path('issues/invite/url/', issues.invite_url, name='invite_url'),
 
                                        path('statistics/', statistics.statistics, name='statistics'),
+                                       path('statistics/priority/', statistics.statistics_priority, name='statistics_priority'),
 
                                        # file
                                        path('file/', file.file, name='file'),

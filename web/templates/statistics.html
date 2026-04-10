@@ -47,10 +47,98 @@
 
 
 {% block js %}
+    <script src="{% static 'plugin/highcharts/highcharts.js' %}"></script>
     <script src="{% static 'plugin/flatpickr/flatpickr.min.js' %}"></script>
     <script src="{% static 'plugin/flatpickr/l10n/zh.js' %}"></script>
     <script>
+        // 全局图表变量
+        let projectChart, priorityChart;
 
+        let priorityUrl = '{% url 'web:statistics_priority' proj_id=request.tracer.project.id %}'
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initDatePicker()
+            // initProjectChart()
+            initPriorityChart()
+        })
+
+        // 1. 初始化日期选择器 (Flatpickr)
+        function initDatePicker() {
+            flatpickr("#dateRange", {
+                mode: "range",
+                locale: "zh",
+                onChange: function (selectedDates, dateStr, instance) {
+                    // 当用户选好两个日期后，触发查询
+                    if (selectedDates.length === 2) {
+                        let start = flatpickr.formatDate(selectedDates[0], "Y-m-d");
+                        let end = flatpickr.formatDate(selectedDates[1], "Y-m-d");
+                        fetchData(start, end); // 带上时间去后端要数据
+                    }
+                }
+            });
+        }
+
+        /*
+        // 2. 初始化左侧：人员进度柱状堆叠图
+        function initProjectChart() {
+            projectChart = Highcharts.chart('projectChart', {
+                chart: {type: 'column'}, // 柱状图
+                title: {text: null},
+                credits: {enabled: false},
+                xAxis: {categories: []}, // 预留给人员名字: ['武沛齐', '未指派']
+                yAxis: {
+                    title: {text: '问题数量'},
+                    allowDecimals: false
+                },
+                plotOptions: {
+                    column: {
+                        stacking: 'normal' // 开启堆叠效果 (核心配置)
+                    }
+                },
+                series: [] // 预留给后端数据: [{name: '新建', data: [1, 2]}, {name: '处理中', data: [0, 1]}]
+            });
+        }
+         */
+
+        // 3. 初始化右侧：优先级饼图
+        function initPriorityChart() {
+            priorityChart = Highcharts.chart('priorityChart', {
+                chart: {type: 'pie'}, // 饼图
+                title: {text: null},
+                credits: {enabled: false},
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {enabled: false}, // 关掉周围乱七八糟的连线
+                        showInLegend: true // 显示底部图例
+                    }
+                },
+                series: [{
+                    name: '数量',
+                    colorByPoint: true,
+                    data: [] // 预留给后端数据: [{name: '高', y: 10}, {name: '中', y: 5}]
+                }]
+            });
+        }
+
+        // 4. 前后端通信中心
+        async function fetchData(start = "", end = "") {
+            // 这里拼接请求参数，发给 Django 视图
+            let url = `${priorityUrl}?start=${start}&end=${end}`;
+
+            console.log('准备')
+            // TODO: 发送 Fetch 请求
+            let res = await fetch(url);
+            let data = await res.json()
+            console.log(data)
+            if (data.status){
+                priorityChart.series[0].setData(data.priority_data)
+            }
+
+
+            // 更新 projectChart 和 priorityChart 的数据
+        }
 
 
     </script>
