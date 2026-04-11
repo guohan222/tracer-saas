@@ -14,6 +14,10 @@ urlpatterns = [
     path('login/', account.login, name='login'),
     path('login/sms/', account.login_sms, name='login_sms'),
     path('index/', home.index, name='index'),
+    path('price/', home.price, name='price'),
+    path('payment/<int:product_id>/', home.payment, name='payment'),
+    path('pay', home.pay, name='pay'),
+    path('pay/notify/', home.pay_notify, name='notify'),
 
     # 管理项目列表
     path('logout/', account.logout, name='logout'),

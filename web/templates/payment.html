@@ -1,0 +1,147 @@
+{% extends 'layout/basic.html' %}
+{% load static %}
+{% block title %} 确认订单 {% endblock %}
+
+{% block content %}
+<style>
+    /* 整个页面的底色调整为浅灰，凸显白色的订单卡片 */
+    body { background-color: #f5f7fa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+
+    /* 订单卡片主体容器 */
+    .order-container {
+        max-width: 900px;
+        margin: 50px auto;
+        background: #fff;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    }
+
+    /* 头部标题 */
+    .order-header {
+        font-size: 24px;
+        font-weight: 600;
+        color: #303133;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #ebeef5;
+    }
+
+    /* 现代化表格样式 */
+    .order-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+    }
+    .order-table th {
+        background-color: #f8f9fa;
+        color: #909399;
+        font-weight: 500;
+        text-align: left;
+        padding: 12px 15px;
+        border-bottom: 1px solid #ebeef5;
+    }
+    .order-table td {
+        padding: 18px 15px;
+        color: #606266;
+        border-bottom: 1px solid #ebeef5;
+        vertical-align: middle;
+    }
+    
+    /* 价格数字专属样式 */
+    .price-text { color: #303133; }
+    .deduct-text { color: #67c23a; } /* 抵扣用绿色显示 */
+    .actual-price { color: #f56c6c; font-size: 18px; font-weight: bold; }
+
+    /* 抵扣提示框 (温馨的橙色调) */
+    .deduct-alert {
+        background-color: #fdf6ec;
+        border: 1px solid #faecd8;
+        color: #e6a23c;
+        padding: 15px 20px;
+        border-radius: 4px;
+        margin-bottom: 30px;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    .deduct-alert strong { color: #f56c6c; }
+
+    /* 底部结算区 */
+    .pay-footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-top: 20px;
+    }
+    .pay-summary {
+        margin-right: 25px;
+        color: #606266;
+        font-size: 15px;
+    }
+    .pay-summary span {
+        color: #f56c6c;
+        font-size: 28px;
+        font-weight: bold;
+        margin-left: 10px;
+    }
+    
+    /* 支付按钮 */
+    .btn-pay {
+        background-color: #409eff;
+        color: #fff;
+        padding: 12px 35px;
+        font-size: 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+    }
+    .btn-pay:hover { background-color: #66b1ff; box-shadow: 0 4px 12px rgba(64,158,255,0.3); }
+</style>
+
+<div class="order-container">
+    <div class="order-header">确认订单信息</div>
+    
+    <table class="order-table">
+        <thead>
+            <tr>
+                <th>产品名称</th>
+                <th>单价</th>
+                <th>购买数量</th>
+                <th>原价总额</th>
+                <th>升级抵扣</th>
+                <th>实际应付</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="color: #303133; font-weight: 500;">{{ prod_obj.name }}</td>
+                <td class="price-text">¥ {{ prod_obj.money }} / 年</td>
+                <td>{{ number }} 年</td>
+                <td class="price-text">¥ {{ origin_price }}</td>
+                <td class="deduct-text">- ¥ {{ balance }}</td>
+                <td class="actual-price">¥ {{ total_price }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if transaction %}
+        <div class="deduct-alert">
+            <div style="font-weight: bold; margin-bottom: 5px;">💡 升级专属优惠</div>
+            <div>系统检测到您当前正在使用的高级版本还有未到期时长。</div>
+            <div>原订单周期：{{ subscribe_obj.start_datetime|date:"Y-m-d" }} ~ {{ subscribe_obj.end_datetime|date:"Y-m-d" }} (当时支付 ¥{{ subscribe_obj.price }})</div>
+            <div style="margin-top: 5px;">剩余价值已自动折算，本次为您抵扣：<strong>¥ {{ balance }}</strong></div>
+        </div>
+    {% endif %}
+
+    <div class="pay-footer">
+        <div class="pay-summary">
+            实付款: <span>¥ {{ total_price }}</span>
+        </div>
+        <a class="btn-pay" href="{% url 'web:pay' %}">立即前往支付宝</a>
+    </div>
+</div>
+
+{% endblock %}

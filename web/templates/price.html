@@ -1,0 +1,162 @@
+{% extends 'layout/basic.html' %}
+{% load static %}
+
+{% block title %}
+    订阅套餐中心
+{% endblock %}
+
+{% block content %}
+    <style>
+        /* 全局基础样式 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f7f9;
+        }
+
+        /* 整体容器布局 */
+        .pricing-container {
+            max-width: 1100px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: #333;
+            font-size: 32px;
+            font-weight: 500;
+        }
+
+        .pricing-wrapper {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        /* 单个卡片样式 */
+        .pricing-card {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: box-shadow 0.3s;
+        }
+
+        .pricing-card:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 卡片头部 */
+        .card-header {
+            background: #f5f5f5;
+            text-align: center;
+            padding: 15px 0;
+            font-size: 16px;
+            color: #333;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        /* 价格区 (已去除所有奇怪高亮) */
+        .card-price {
+            text-align: center;
+            padding: 40px 0;
+            font-size: 32px;
+            color: #333;
+        }
+
+        /* 购买交互区 */
+        .buy-section {
+            display: flex;
+            padding: 0 20px 20px 20px;
+        }
+
+        .buy-section .label {
+            background: #eee;
+            border: 1px solid #ccc;
+            border-right: none;
+            padding: 8px 15px;
+            color: #666;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .buy-section input {
+            width: 60px;
+            border: 1px solid #ccc;
+            padding: 8px;
+            outline: none;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .buy-section button {
+            flex: 1;
+            background: #255e98;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: -1px; /* 模拟图片里的无缝拼接效果 */
+            border-radius: 0 2px 2px 0;
+        }
+
+        .buy-section button:hover {
+            background: #1b4b7a;
+        }
+
+        /* 功能列表 */
+        .feature-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 15px 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #333;
+            font-size: 14px;
+        }
+    </style>
+
+    <div class="pricing-container">
+        <h2 class="pricing-header">多种方案，使用多种场景</h2>
+
+        <div class="pricing-wrapper">
+
+            {% for product in product_list %}
+                <form class="form-inline" method="get" action="{% url 'web:payment' product_id=product.id %}">
+                    <div class="pricing-card">
+                        <div class="card-header">{{ product.name }}</div>
+                        <div class="card-price">
+                            <span>¥ {{ product.money }} / 年</span>
+                        </div>
+                        <div class="buy-section">
+                            <span class="label">数量</span>
+                            <input type="number" name="number" value="1" min="1">
+                            <button type="submit">立即购买</button>
+                        </div>
+                        <ul class="feature-list">
+                            <li>最大项目数量：{{ product.max_project }}</li>
+                            <li>最大项目空间：{{ product.max_storage }}G</li>
+                            <li>单次文件上传限制：{{ product.max_send }}M</li>
+                            <li>项目成员：{{ product.max_member }}</li>
+                        </ul>
+                    </div>
+                </form>
+            {% endfor %}
+
+
+        </div>
+    </div>
+{% endblock %}

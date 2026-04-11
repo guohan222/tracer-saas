@@ -57,12 +57,6 @@ class Subscribe(models.Model):
 
     create_datetime = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
 
-    # 覆盖父类的save方法实现，控制存储过程（在保存前执行自定义操作）
-    def save(self, *args, **kwargs):
-        if self.count:
-            data = 365 * self.count
-            self.stop_time = self.start_time + timedelta(days=data)
-        super().save(*args, **kwargs)
 
 
 # 项目表

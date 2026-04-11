@@ -45,10 +45,7 @@
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 {% if request.tracer.user %}
                     <li class="nav-item">
-                        <a class="nav-link" href="#">工作台</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">日 历</a>
+                        <a class="nav-link" href="{% url 'web:price' %}">购买订阅</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#"> <i class="fa-solid fa-bell"></i> </a>
@@ -63,8 +60,7 @@
                             {{ request.tracer.user.name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#">资产中心</a></li>
-                            <li><a class="dropdown-item" href="#">账号中心</a></li>
+                            <li><a class="dropdown-item" href="{% url 'web:index' %}">官网首页</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>

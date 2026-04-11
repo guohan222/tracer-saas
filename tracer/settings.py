@@ -124,13 +124,44 @@ STATICFILES_DIRS = [BASE_DIR / 'web/static']
 
 
 
+# redis
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "88888888",  # Redis 主机 IP 和端口
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "max_connections": 1000,
+                "encoding": "utf-8"
+            },
+            "PASSWORD": "88888888"  # Redis 密码
+        }
+    }
+}
+
+
+
 # 调用阿里云API配置
 ALIYUN_ACCESS_KEY_ID = '88888888'
 ALIYUN_ACCESS_KEY_SECRET = '88888888'
 
+
+# 支付宝
+ALI_APPID = '888'
+ALI_GATEWAY = 'https://openapi-sandbox.dl.alipaydev.com/gateway.do'
+# 应用私钥
+ALI_PRI_KEY_PATH = '888'
+# 支付宝公钥
+ALI_PUB_KEY_PATH = '888'
+ALI_NOTIFY_URL = 'http://127.0.0.1:8000/pay/notify/'
+ALI_RETURN_URL = 'http://127.0.0.1:8000/pay/notify/'
+
+
 # 腾讯cos
 TENCENT_COS_ID = '88888888'
 TENCENT_COS_KEY = '88888888'
+
 
 # 短信模板ID
 SMS_TEMPLATE_ID = {
@@ -147,6 +178,7 @@ URL_WHITE_LIST = [
     '/login/',
     '/login/sms/',
     '/index/',
+    '/price/',
 ]
 
 
