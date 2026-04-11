@@ -1,6 +1,10 @@
 {% extends 'layout/manage.html' %}
 {% load static %}
 
+{% block title %}
+	{{ request.tracer.project.name }}问题编辑
+{% endblock %}
+
 {% block css %}
     <link rel="stylesheet" href="{% static 'plugin/flatpickr/flatpickr.min.css' %}">
 

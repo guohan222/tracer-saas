@@ -1,6 +1,9 @@
 {% extends 'layout/manage.html' %}
 {% load static %}
 
+{% block title %}
+	删除{{ request.tracer.project.name }}项目
+{% endblock %}
 
 {% block content %}
     <div class="container mt-4">
@@ -12,12 +15,6 @@
                     个人中心
                 </div>
                 <div class="list-group list-group-flush">
-                    <a href="#" class="list-group-item list-group-item-action py-3 text-secondary">
-                        我的资料
-                    </a>
-                    <a href="#" class="list-group-item list-group-item-action py-3 text-secondary">
-                        修改密码
-                    </a>
                     <a href="#" class="list-group-item list-group-item-action py-3 text-dark fw-bold"
                        style="background-color: #f8f9fa; border-left: 3px solid #fd7e14;">
                         删除项目

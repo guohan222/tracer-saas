@@ -3,6 +3,9 @@
 {% load issues %}
 {% load dashboard %}
 
+{% block title %}
+	{{ request.tracer.project.name }}概览
+{% endblock %}
 
 {% block css %}
     <style>

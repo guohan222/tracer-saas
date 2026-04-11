@@ -1,6 +1,9 @@
 {% extends 'layout/manage.html' %}
 {% load static %}
 
+{% block title %}
+	{{ request.tracer.project.name }}项目设置
+{% endblock %}
 
 {% block content %}
     <div class="container mt-4">
@@ -12,12 +15,6 @@
                         个人中心
                     </div>
                     <div class="list-group list-group-flush">
-                        <a href="#" class="list-group-item list-group-item-action py-3 text-secondary">
-                            我的资料
-                        </a>
-                        <a href="#" class="list-group-item list-group-item-action py-3 text-secondary">
-                            修改密码
-                        </a>
                         <a href="{% url 'web:settings_del' proj_id=request.tracer.project.id %}" class="list-group-item list-group-item-action py-3 text-secondary">
                             删除项目
                         </a>

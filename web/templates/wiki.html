@@ -2,6 +2,11 @@
 {% load wiki %}
 {% load static %}
 
+{% block title %}
+	{{ request.tracer.project.name }}知识库
+{% endblock %}
+
+
 {% block css %}
     <link rel="stylesheet" href="{% static 'plugin/editor.md-master/css/editormd.min.css' %}">
 {% endblock %}

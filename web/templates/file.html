@@ -2,6 +2,11 @@
 {% load static %}
 {% load dashboard %}
 
+{% block title %}
+	{{ request.tracer.project.name }}文件库
+{% endblock %}
+
+
 {% block content %}
     <div class="container-fluid mt-4">
         <div class="card shadow-sm">
